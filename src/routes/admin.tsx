@@ -1,0 +1,320 @@
+import { useEffect, useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import type { Session } from "@supabase/supabase-js";
+import { toast } from "sonner";
+import { Toaster } from "@/components/ui/sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useI18n } from "@/lib/i18n";
+import { fetchBathingWater, fetchBikePath, fetchWaterAdvisories } from "@/lib/civic-data";
+
+export const Route = createFileRoute("/admin")({
+  ssr: false,
+  head: () => ({
+    meta: [
+      { title: "Area riservata · Golfo Dianese Live" },
+      { name: "description", content: "Pannello di aggiornamento dati per Golfo Dianese Live." },
+      { name: "robots", content: "noindex" },
+      { property: "og:title", content: "Area riservata · Golfo Dianese Live" },
+      { property: "og:description", content: "Pannello di aggiornamento dati per Golfo Dianese Live." },
+    ],
+  }),
+  component: AdminPage,
+});
+
+function LoginForm() {
+  const { t } = useI18n();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    const { error } =
+      mode === "signin"
+        ? await supabase.auth.signInWithPassword({ email, password })
+        : await supabase.auth.signUp({
+            email,
+            password,
+            options: { emailRedirectTo: `${window.location.origin}/admin` },
+          });
+    setBusy(false);
+    if (error) toast.error(error.message);
+    else if (mode === "signup") toast.success("Account creato. Chiedi l'abilitazione admin.");
+  }
+
+  return (
+    <form onSubmit={submit} className="mx-auto grid w-full max-w-sm gap-3 rounded-3xl border border-border bg-card p-6">
+      <h1 className="text-2xl font-bold">{t("admin.title")}</h1>
+      <label className="grid gap-1 text-sm font-semibold">
+        {t("admin.email")}
+        <input
+          type="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="rounded-xl border border-input bg-background px-3 py-2 text-base font-normal"
+        />
+      </label>
+      <label className="grid gap-1 text-sm font-semibold">
+        {t("admin.password")}
+        <input
+          type="password"
+          required
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="rounded-xl border border-input bg-background px-3 py-2 text-base font-normal"
+        />
+      </label>
+      <button
+        type="submit"
+        disabled={busy}
+        className="rounded-xl bg-primary px-4 py-2 font-semibold text-primary-foreground disabled:opacity-60"
+      >
+        {mode === "signin" ? t("admin.login") : "Crea account"}
+      </button>
+      <button
+        type="button"
+        onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
+        className="text-sm underline"
+      >
+        {mode === "signin" ? "Crea un nuovo account" : "Ho già un account"}
+      </button>
+      <Link to="/" className="text-center text-sm underline">
+        {t("admin.back")}
+      </Link>
+    </form>
+  );
+}
+
+function Panel() {
+  const { t } = useI18n();
+  const qc = useQueryClient();
+  const bathing = useQuery({ queryKey: ["bathing-water"], queryFn: fetchBathingWater });
+  const advisories = useQuery({ queryKey: ["water-advisories"], queryFn: fetchWaterAdvisories });
+  const bike = useQuery({ queryKey: ["bike-path"], queryFn: fetchBikePath });
+
+  const [newAdvisory, setNewAdvisory] = useState({
+    zone: "",
+    kind: "planned",
+    description: "",
+    expected_restore_at: "",
+  });
+
+  async function saveBathing(id: string, status: string, last_sampled_on: string) {
+    const { error } = await supabase
+      .from("bathing_water")
+      .update({ status, last_sampled_on: last_sampled_on || null })
+      .eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("OK");
+    qc.invalidateQueries({ queryKey: ["bathing-water"] });
+  }
+
+  async function addAdvisory() {
+    if (!newAdvisory.zone) return toast.error("Zona obbligatoria");
+    const { error } = await supabase.from("water_advisories").insert({
+      zone: newAdvisory.zone,
+      kind: newAdvisory.kind,
+      description: newAdvisory.description || null,
+      expected_restore_at: newAdvisory.expected_restore_at
+        ? new Date(newAdvisory.expected_restore_at).toISOString()
+        : null,
+    });
+    if (error) return toast.error(error.message);
+    setNewAdvisory({ zone: "", kind: "planned", description: "", expected_restore_at: "" });
+    toast.success("OK");
+    qc.invalidateQueries({ queryKey: ["water-advisories"] });
+  }
+
+  async function removeAdvisory(id: string) {
+    const { error } = await supabase.from("water_advisories").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    qc.invalidateQueries({ queryKey: ["water-advisories"] });
+  }
+
+  async function saveBike(id: string, status: string, message_it: string, message_en: string) {
+    const { error } = await supabase
+      .from("bike_path_status")
+      .update({ status, message_it, message_en })
+      .eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("OK");
+    qc.invalidateQueries({ queryKey: ["bike-path"] });
+  }
+
+  const input = "w-full rounded-xl border border-input bg-background px-3 py-2";
+  const card = "rounded-3xl border border-border bg-card p-5";
+  const btn = "rounded-xl bg-primary px-4 py-2 font-semibold text-primary-foreground";
+
+  return (
+    <div className="grid gap-5">
+      <section className={card}>
+        <h2 className="mb-3 text-xl font-bold">{t("card.bathing")}</h2>
+        {(bathing.data ?? []).map((b) => (
+          <form
+            key={b.id}
+            className="grid gap-2 sm:grid-cols-[1fr_1fr_auto] sm:items-end"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const f = new FormData(e.currentTarget);
+              saveBathing(b.id, String(f.get("status")), String(f.get("date")));
+            }}
+          >
+            <label className="grid gap-1 text-sm font-semibold">
+              {b.beach_name}
+              <select name="status" defaultValue={b.status} className={input}>
+                <option value="compliant">Conforme</option>
+                <option value="non_compliant">Non conforme</option>
+                <option value="unknown">Non disponibile</option>
+              </select>
+            </label>
+            <label className="grid gap-1 text-sm font-semibold">
+              {t("bathing.lastSample")}
+              <input type="date" name="date" defaultValue={b.last_sampled_on ?? ""} className={input} />
+            </label>
+            <button className={btn}>{t("admin.save")}</button>
+          </form>
+        ))}
+      </section>
+
+      <section className={card}>
+        <h2 className="mb-3 text-xl font-bold">{t("card.water")}</h2>
+        <div className="mb-4 grid gap-2 sm:grid-cols-2">
+          <input
+            placeholder={t("water.zone")}
+            value={newAdvisory.zone}
+            onChange={(e) => setNewAdvisory({ ...newAdvisory, zone: e.target.value })}
+            className={input}
+          />
+          <select
+            value={newAdvisory.kind}
+            onChange={(e) => setNewAdvisory({ ...newAdvisory, kind: e.target.value })}
+            className={input}
+          >
+            <option value="planned">{t("water.kind.planned")}</option>
+            <option value="outage">{t("water.kind.outage")}</option>
+            <option value="works">{t("water.kind.works")}</option>
+          </select>
+          <input
+            placeholder="Descrizione"
+            value={newAdvisory.description}
+            onChange={(e) => setNewAdvisory({ ...newAdvisory, description: e.target.value })}
+            className={input}
+          />
+          <input
+            type="datetime-local"
+            value={newAdvisory.expected_restore_at}
+            onChange={(e) => setNewAdvisory({ ...newAdvisory, expected_restore_at: e.target.value })}
+            className={input}
+          />
+          <button type="button" onClick={addAdvisory} className={btn}>
+            {t("admin.add")}
+          </button>
+        </div>
+        <ul className="grid gap-2">
+          {(advisories.data ?? []).map((a) => (
+            <li key={a.id} className="flex items-center justify-between gap-3 rounded-2xl bg-secondary/60 p-3">
+              <span className="text-sm">
+                <strong>{a.zone}</strong> · {t(`water.kind.${a.kind}`)}
+              </span>
+              <button onClick={() => removeAdvisory(a.id)} className="text-sm font-semibold text-destructive">
+                {t("admin.delete")}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className={card}>
+        <h2 className="mb-3 text-xl font-bold">{t("mobility.bike")}</h2>
+        {(bike.data ?? []).map((p) => (
+          <form
+            key={p.id}
+            className="grid gap-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const f = new FormData(e.currentTarget);
+              saveBike(p.id, String(f.get("status")), String(f.get("it")), String(f.get("en")));
+            }}
+          >
+            <select name="status" defaultValue={p.status} className={input}>
+              <option value="open">{t("mobility.bike.open")}</option>
+              <option value="works">{t("mobility.bike.works")}</option>
+              <option value="closed">{t("mobility.bike.closed")}</option>
+            </select>
+            <textarea name="it" defaultValue={p.message_it ?? ""} className={input} rows={2} />
+            <textarea name="en" defaultValue={p.message_en ?? ""} className={input} rows={2} />
+            <button className={btn}>{t("admin.save")}</button>
+          </form>
+        ))}
+      </section>
+    </div>
+  );
+}
+
+function AdminPage() {
+  const { t } = useI18n();
+  const [session, setSession] = useState<Session | null>(null);
+  const [ready, setReady] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+      setReady(true);
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (!session) {
+      setIsAdmin(false);
+      return;
+    }
+    supabase
+      .from("admin_users")
+      .select("user_id")
+      .eq("user_id", session.user.id)
+      .maybeSingle()
+      .then(({ data }) => setIsAdmin(Boolean(data)));
+  }, [session]);
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Toaster />
+      <header className="surface-sea px-5 py-5">
+        <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
+          <h1 className="text-xl font-bold">{t("admin.title")}</h1>
+          {session ? (
+            <button
+              onClick={() => supabase.auth.signOut()}
+              className="rounded-full bg-primary-foreground/20 px-4 py-1.5 text-sm font-semibold"
+            >
+              {t("admin.logout")}
+            </button>
+          ) : null}
+        </div>
+      </header>
+      <main className="mx-auto max-w-3xl px-4 py-6">
+        {!ready ? (
+          <p className="text-muted-foreground">{t("app.loading")}</p>
+        ) : !session ? (
+          <LoginForm />
+        ) : !isAdmin ? (
+          <div className="rounded-3xl border border-border bg-card p-6">
+            <p className="mb-3">{t("admin.noAccess")}</p>
+            <Link to="/" className="underline">
+              {t("admin.back")}
+            </Link>
+          </div>
+        ) : (
+          <Panel />
+        )}
+      </main>
+    </div>
+  );
+}
