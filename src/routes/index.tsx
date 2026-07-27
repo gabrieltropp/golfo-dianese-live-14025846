@@ -1,24 +1,87 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Anchor, Lock } from "lucide-react";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { WeatherCard } from "@/components/cards/WeatherCard";
+import { BathingCard } from "@/components/cards/BathingCard";
+import { WaterCard } from "@/components/cards/WaterCard";
+import { MobilityCard } from "@/components/cards/MobilityCard";
+import { useI18n } from "@/lib/i18n";
+import { ARPAL_URL } from "@/lib/civic-data";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
+const DESC =
+  "Allerta meteo Protezione Civile, balneabilità ARPAL, avvisi acqua potabile e mobilità per Diano Marina e il Golfo Dianese.";
+
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "Golfo Dianese Live · Servizi in tempo reale a Diano Marina" },
+      { name: "description", content: DESC },
+      { property: "og:title", content: "Golfo Dianese Live · Diano Marina" },
+      { property: "og:description", content: DESC },
+    ],
+  }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
+  const { t } = useI18n();
+
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div className="min-h-screen bg-background">
+      <header className="surface-sea px-5 pb-8 pt-6">
+        <div className="mx-auto flex max-w-4xl flex-col gap-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <span className="flex size-11 items-center justify-center rounded-2xl bg-primary-foreground/15">
+                <Anchor className="size-6" />
+              </span>
+              <div>
+                <h1 className="text-2xl font-extrabold leading-tight sm:text-3xl">
+                  {t("app.title")}
+                </h1>
+                <p className="text-sm opacity-90">{t("app.subtitle")}</p>
+              </div>
+            </div>
+            <LanguageSwitcher />
+          </div>
+        </div>
+      </header>
+
+      <main className="mx-auto -mt-4 max-w-4xl px-4 pb-12">
+        <div className="grid gap-4 md:grid-cols-2 md:items-start">
+          <WeatherCard />
+          <BathingCard />
+          <WaterCard />
+          <MobilityCard />
+        </div>
+      </main>
+
+      <footer className="border-t border-border bg-secondary/60 px-5 py-8">
+        <div className="mx-auto max-w-4xl text-sm text-muted-foreground">
+          <p className="mb-3">{t("footer.disclaimer")}</p>
+          <p className="mb-2 font-semibold text-foreground">{t("footer.sources")}</p>
+          <ul className="mb-4 grid gap-1">
+            <li>
+              <a className="underline" href="https://allertaliguria.regione.liguria.it/" target="_blank" rel="noreferrer noopener">
+                Allerta Liguria · Protezione Civile
+              </a>
+            </li>
+            <li>
+              <a className="underline" href={ARPAL_URL} target="_blank" rel="noreferrer noopener">
+                ARPAL · Balneabilità
+              </a>
+            </li>
+            <li>
+              <a className="underline" href="https://www.rivieracqua.it/" target="_blank" rel="noreferrer noopener">
+                Rivieracqua · Servizio idrico
+              </a>
+            </li>
+          </ul>
+          <Link to="/admin" className="inline-flex items-center gap-2 underline">
+            <Lock className="size-4" /> {t("app.admin")}
+          </Link>
+        </div>
+      </footer>
     </div>
   );
 }

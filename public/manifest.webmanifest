@@ -1,0 +1,16 @@
+{
+  "name": "Golfo Dianese Live",
+  "short_name": "Golfo Live",
+  "description": "Allerta meteo, balneabilità, acqua potabile e mobilità nel Golfo Dianese.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f2f6fa",
+  "theme_color": "#0b2b4a",
+  "lang": "it",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
