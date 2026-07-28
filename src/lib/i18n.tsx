@@ -69,6 +69,17 @@ const it: Dict = {
   "admin.delete": "Elimina",
   "admin.noAccess": "Questo account non ha i permessi di amministratore.",
   "admin.back": "Torna alla home",
+  "card.webcam": "Webcam sul Golfo",
+  "webcam.live": "Diretta",
+  "webcam.note": "Immagini in diretta dal Golfo Dianese. Fonte: ipcamlive.",
+  "card.comuni": "Comuni del Golfo Dianese",
+  "comuni.subtitle": "Avvisi e informazioni per ogni comune",
+  "comuni.noNotices": "Nessun avviso attivo",
+  "comuni.notices": "Avvisi attivi",
+  "mobility.route": "Percorso ciclabile Imperia → Andora",
+  "mobility.routeOk": "Percorso percorribile",
+  "mobility.routeBlocked": "Interruzione segnalata",
+  "weather.conditions": "Condizioni attuali",
 };
 
 const en: Dict = {
@@ -135,6 +146,17 @@ const en: Dict = {
   "admin.delete": "Delete",
   "admin.noAccess": "This account has no administrator rights.",
   "admin.back": "Back to home",
+  "card.webcam": "Webcam on the gulf",
+  "webcam.live": "Live",
+  "webcam.note": "Live images from the Golfo Dianese. Source: ipcamlive.",
+  "card.comuni": "Towns of the Golfo Dianese",
+  "comuni.subtitle": "Notices and info for each town",
+  "comuni.noNotices": "No active notices",
+  "comuni.notices": "Active notices",
+  "mobility.route": "Cycle path Imperia → Andora",
+  "mobility.routeOk": "Route open",
+  "mobility.routeBlocked": "Interruption reported",
+  "weather.conditions": "Current conditions",
 };
 
 // FR / DE: structure ready, partially populated. Missing keys fall back to EN.
