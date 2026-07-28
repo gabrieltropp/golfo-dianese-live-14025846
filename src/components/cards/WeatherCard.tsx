@@ -3,7 +3,14 @@ import { useQuery } from "@tanstack/react-query";
 import { CloudSun, Droplets, Mountain, Zap } from "lucide-react";
 import { StatusCard, DetailRow, type StatusTone } from "@/components/StatusCard";
 import { useI18n } from "@/lib/i18n";
-import { COMUNI, fetchAlert, fetchWeather, type AlertColor, type AlertDay } from "@/lib/civic-data";
+import {
+  COMUNI,
+  fetchAlert,
+  fetchWeather,
+  weatherDescription,
+  type AlertColor,
+  type AlertDay,
+} from "@/lib/civic-data";
 
 const TONE_BY_COLOR: Record<AlertColor, StatusTone> = {
   verde: "green",
@@ -94,8 +101,12 @@ export function WeatherCard() {
       ? t("app.loading")
       : t("app.error");
 
+  const conditions = weatherQuery.data
+    ? weatherDescription(weatherQuery.data.code, lang)
+    : null;
+
   const summary = weatherQuery.data
-    ? `${comune.name} · ${weatherQuery.data.temperature}°C (${weatherQuery.data.minToday}° / ${weatherQuery.data.maxToday}°)`
+    ? `${comune.name} · ${conditions} · ${weatherQuery.data.temperature}°C (${weatherQuery.data.minToday}° / ${weatherQuery.data.maxToday}°)`
     : comune.name;
 
   return (
@@ -124,7 +135,14 @@ export function WeatherCard() {
       </label>
 
       {weatherQuery.data ? (
-        <div className="mb-4 flex gap-3">
+        <>
+          <div className="mb-3 rounded-2xl bg-sky/25 p-4">
+            <p className="text-sm font-semibold text-muted-foreground">
+              {t("weather.conditions")}
+            </p>
+            <p className="text-2xl font-bold">{conditions}</p>
+          </div>
+          <div className="mb-4 flex gap-3">
           <div className="flex-1 rounded-2xl bg-sky/25 p-4">
             <p className="text-sm font-semibold text-muted-foreground">{t("weather.temp")}</p>
             <p className="text-3xl font-bold">{weatherQuery.data.temperature}°C</p>
@@ -133,7 +151,8 @@ export function WeatherCard() {
             <p className="text-sm font-semibold text-muted-foreground">{t("weather.wind")}</p>
             <p className="text-3xl font-bold">{weatherQuery.data.wind} km/h</p>
           </div>
-        </div>
+          </div>
+        </>
       ) : null}
 
       {alertQuery.data ? (
