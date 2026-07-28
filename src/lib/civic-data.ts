@@ -118,3 +118,35 @@ export async function fetchBikePath() {
 
 export const ARPAL_URL =
   "https://www.arpal.liguria.it/tematiche/mare/balneabilita.html?ANNO=2026&CODICE_ACQUA=IT007008027A001&PROVINCIA=Imperia&COMUNE=Diano+Marina";
+
+const WEATHER_TEXT: Record<string, Record<string, string>> = {
+  clear: { it: "Sereno", en: "Clear", fr: "Dégagé", de: "Klar" },
+  mainlyClear: { it: "Poco nuvoloso", en: "Mainly clear", fr: "Peu nuageux", de: "Heiter" },
+  cloudy: { it: "Nuvoloso", en: "Cloudy", fr: "Nuageux", de: "Bewölkt" },
+  fog: { it: "Nebbia", en: "Fog", fr: "Brouillard", de: "Nebel" },
+  drizzle: { it: "Pioviggine", en: "Drizzle", fr: "Bruine", de: "Nieselregen" },
+  rain: { it: "Pioggia", en: "Rain", fr: "Pluie", de: "Regen" },
+  heavyRain: { it: "Pioggia forte", en: "Heavy rain", fr: "Forte pluie", de: "Starkregen" },
+  snow: { it: "Neve", en: "Snow", fr: "Neige", de: "Schnee" },
+  showers: { it: "Rovesci", en: "Showers", fr: "Averses", de: "Schauer" },
+  thunder: { it: "Temporale", en: "Thunderstorm", fr: "Orage", de: "Gewitter" },
+};
+
+function weatherKey(code: number): string {
+  if (code === 0) return "clear";
+  if (code <= 2) return "mainlyClear";
+  if (code === 3) return "cloudy";
+  if (code === 45 || code === 48) return "fog";
+  if (code >= 51 && code <= 57) return "drizzle";
+  if (code >= 61 && code <= 63) return "rain";
+  if (code === 65 || code === 67) return "heavyRain";
+  if ((code >= 71 && code <= 77) || code === 85 || code === 86) return "snow";
+  if (code >= 80 && code <= 82) return "showers";
+  if (code >= 95) return "thunder";
+  return "cloudy";
+}
+
+export function weatherDescription(code: number, lang: string): string {
+  const entry = WEATHER_TEXT[weatherKey(code)];
+  return entry[lang] ?? entry.en;
+}
