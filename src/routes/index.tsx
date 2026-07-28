@@ -39,7 +39,7 @@ function Index() {
           loop
           playsInline
           preload="auto"
-          className="size-full object-cover opacity-45"
+          className="size-full object-cover opacity-65"
         />
         <div className="absolute inset-0 bg-background/40" />
       </div>
