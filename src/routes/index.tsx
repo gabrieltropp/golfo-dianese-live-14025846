@@ -1,10 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Anchor, Lock } from "lucide-react";
+import { Lock } from "lucide-react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { WeatherCard } from "@/components/cards/WeatherCard";
 import { BathingCard } from "@/components/cards/BathingCard";
 import { WaterCard } from "@/components/cards/WaterCard";
 import { MobilityCard } from "@/components/cards/MobilityCard";
+import { WebcamCard } from "@/components/cards/WebcamCard";
+import { ComuniCard } from "@/components/cards/ComuniCard";
 import { useI18n } from "@/lib/i18n";
 import { ARPAL_URL } from "@/lib/civic-data";
 
@@ -32,8 +34,14 @@ function Index() {
         <div className="mx-auto flex max-w-4xl flex-col gap-4">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-3">
-              <span className="flex size-11 items-center justify-center rounded-2xl bg-primary-foreground/15">
-                <Anchor className="size-6" />
+              <span className="flex size-12 items-center justify-center overflow-hidden rounded-2xl bg-primary-foreground/15">
+                <img
+                  src="/icons/icon-512.png"
+                  alt="Golfo Dianese Live"
+                  className="size-full object-cover"
+                  width={48}
+                  height={48}
+                />
               </span>
               <div>
                 <h1 className="text-2xl font-extrabold leading-tight sm:text-3xl">
@@ -51,8 +59,10 @@ function Index() {
         <div className="grid gap-4 md:grid-cols-2 md:items-start">
           <WeatherCard />
           <BathingCard />
+          <WebcamCard />
           <WaterCard />
           <MobilityCard />
+          <ComuniCard />
         </div>
       </main>
 
