@@ -41,7 +41,7 @@ function Index() {
           preload="auto"
           className="size-full object-cover opacity-100"
         />
-        <div className="absolute inset-0 bg-background/100" />
+        <div className="absolute inset-0 bg-background/10" />
       </div>
       <div className="relative z-10">
       <header className="surface-sea px-5 pb-8 pt-6">
