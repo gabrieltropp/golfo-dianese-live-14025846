@@ -19,7 +19,7 @@ export const Route = createFileRoute("/")({
     meta: [
       { title: "Golfo Dianese Live · Servizi in tempo reale a Diano Marina" },
       { name: "description", content: DESC },
-      { property: "og:title", content: "Golfo Dianese Live · Diano Marina" },
+      { property: "og:title", content: "Golfo Dianese Live · Servizi in tempo reale a Diano Marina" },
       { property: "og:description", content: DESC },
     ],
   }),
