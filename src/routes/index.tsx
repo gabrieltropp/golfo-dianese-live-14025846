@@ -9,6 +9,7 @@ import { WebcamCard } from "@/components/cards/WebcamCard";
 import { ComuniCard } from "@/components/cards/ComuniCard";
 import { useI18n } from "@/lib/i18n";
 import { ARPAL_URL } from "@/lib/civic-data";
+import bgVideo from "@/assets/sunrisediano.mp4.asset.json";
 
 const DESC =
   "Allerta meteo Protezione Civile, balneabilità ARPAL, avvisi acqua potabile e mobilità per Diano Marina e il Golfo Dianese.";
@@ -29,7 +30,20 @@ function Index() {
   const { t } = useI18n();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="relative min-h-screen bg-background">
+      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden="true">
+        <video
+          src={bgVideo.url}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          className="size-full object-cover opacity-25"
+        />
+        <div className="absolute inset-0 bg-background/40" />
+      </div>
+      <div className="relative z-10">
       <header className="surface-sea px-5 pb-8 pt-6">
         <div className="mx-auto flex max-w-4xl flex-col gap-4">
           <div className="flex items-start justify-between gap-4">
@@ -92,6 +106,7 @@ function Index() {
           </Link>
         </div>
       </footer>
+      </div>
     </div>
   );
 }
