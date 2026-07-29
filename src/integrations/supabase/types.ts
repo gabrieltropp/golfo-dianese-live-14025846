@@ -29,6 +29,98 @@ export type Database = {
         }
         Relationships: []
       }
+      avvisi: {
+        Row: {
+          categoria: string | null
+          comune: string
+          created_at: string
+          data_pubblicazione: string | null
+          fetched_at: string
+          fonte: string
+          id: string
+          testo_breve: string | null
+          titolo: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          categoria?: string | null
+          comune: string
+          created_at?: string
+          data_pubblicazione?: string | null
+          fetched_at?: string
+          fonte: string
+          id?: string
+          testo_breve?: string | null
+          titolo: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          categoria?: string | null
+          comune?: string
+          created_at?: string
+          data_pubblicazione?: string | null
+          fetched_at?: string
+          fonte?: string
+          id?: string
+          testo_breve?: string | null
+          titolo?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
+      balneazione_stato: {
+        Row: {
+          anno: number | null
+          classificazione: string | null
+          codice_acqua: string
+          created_at: string
+          data_ultimo_controllo: string | null
+          fetched_at: string
+          motivo: string | null
+          source_url: string | null
+          stato: string
+          stato_raw: string | null
+          updated_at: string
+        }
+        Insert: {
+          anno?: number | null
+          classificazione?: string | null
+          codice_acqua: string
+          created_at?: string
+          data_ultimo_controllo?: string | null
+          fetched_at?: string
+          motivo?: string | null
+          source_url?: string | null
+          stato?: string
+          stato_raw?: string | null
+          updated_at?: string
+        }
+        Update: {
+          anno?: number | null
+          classificazione?: string | null
+          codice_acqua?: string
+          created_at?: string
+          data_ultimo_controllo?: string | null
+          fetched_at?: string
+          motivo?: string | null
+          source_url?: string | null
+          stato?: string
+          stato_raw?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "balneazione_stato_codice_acqua_fkey"
+            columns: ["codice_acqua"]
+            isOneToOne: true
+            referencedRelation: "punti_balneazione"
+            referencedColumns: ["codice_acqua"]
+          },
+        ]
+      }
       bathing_water: {
         Row: {
           beach_name: string
@@ -94,6 +186,66 @@ export type Database = {
           message_it?: string | null
           segment?: string
           status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      fonti_stato: {
+        Row: {
+          created_at: string
+          error: string | null
+          fetched_at: string
+          fonte: string
+          items: number
+          last_success_at: string | null
+          ok: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          fetched_at?: string
+          fonte: string
+          items?: number
+          last_success_at?: string | null
+          ok?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          fetched_at?: string
+          fonte?: string
+          items?: number
+          last_success_at?: string | null
+          ok?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      punti_balneazione: {
+        Row: {
+          codice_acqua: string
+          comune: string
+          created_at: string
+          nome_punto: string
+          ordine_costa: number
+          updated_at: string
+        }
+        Insert: {
+          codice_acqua: string
+          comune: string
+          created_at?: string
+          nome_punto: string
+          ordine_costa?: number
+          updated_at?: string
+        }
+        Update: {
+          codice_acqua?: string
+          comune?: string
+          created_at?: string
+          nome_punto?: string
+          ordine_costa?: number
           updated_at?: string
         }
         Relationships: []
