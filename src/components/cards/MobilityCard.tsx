@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Car, Bike } from "lucide-react";
 import { StatusCard, StatusBadge, type StatusTone } from "@/components/StatusCard";
@@ -38,6 +39,61 @@ function BikeRoute({ blocked }: { blocked: boolean }) {
   );
 }
 
+function TrafficMap() {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const key = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY as
+      | string
+      | undefined;
+    const channel = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_TRACKING_ID as
+      | string
+      | undefined;
+    if (!key || !ref.current) return;
+
+    let cancelled = false;
+    const init = () => {
+      if (cancelled || !ref.current) return;
+      const g = (window as unknown as { google?: typeof google }).google;
+      if (!g?.maps) return;
+      const map = new g.maps.Map(ref.current, {
+        center: { lat: 43.9135, lng: 8.075 },
+        zoom: 13,
+        disableDefaultUI: true,
+        zoomControl: true,
+        clickableIcons: false,
+        styles: [
+          { featureType: "poi", stylers: [{ visibility: "off" }] },
+          { featureType: "transit", stylers: [{ visibility: "off" }] },
+        ],
+      });
+      new g.maps.TrafficLayer().setMap(map);
+    };
+
+    const w = window as unknown as Record<string, unknown>;
+    if ((w.google as { maps?: unknown } | undefined)?.maps) {
+      init();
+    } else {
+      w.__initGolfoTraffic = init;
+      const existing = document.getElementById("gmaps-js");
+      if (!existing) {
+        const s = document.createElement("script");
+        s.id = "gmaps-js";
+        s.async = true;
+        s.src = `https://maps.googleapis.com/maps/api/js?key=${key}&loading=async&callback=__initGolfoTraffic${
+          channel ? `&channel=${channel}` : ""
+        }`;
+        document.head.appendChild(s);
+      }
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return <div ref={ref} className="h-64 w-full" />;
+}
+
 export function MobilityCard() {
   const { t, lang } = useI18n();
   const { data } = useQuery({
@@ -68,22 +124,6 @@ export function MobilityCard() {
       <div className="grid gap-5">
         <div>
           <h3 className="mb-2 flex items-center gap-2 text-lg font-bold">
-            <Car className="size-5" /> {t("mobility.traffic")}
-          </h3>
-          <p className="mb-2 text-sm text-muted-foreground">{t("mobility.trafficHint")}</p>
-          <div className="overflow-hidden rounded-2xl border border-border">
-            <iframe
-              title={t("mobility.traffic")}
-              src="https://maps.google.com/maps?q=Diano%20Marina&t=m&z=14&layer=t&output=embed"
-              className="h-64 w-full"
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            />
-          </div>
-        </div>
-
-        <div>
-          <h3 className="mb-2 flex items-center gap-2 text-lg font-bold">
             <Bike className="size-5" /> {t("mobility.bike")}
           </h3>
           <div className="mb-2">
@@ -96,7 +136,22 @@ export function MobilityCard() {
           </p>
           {path ? <p className="text-sm font-semibold">{path.segment}</p> : null}
           {message ? <p className="mt-1 text-sm">{message}</p> : null}
+          {path ? (
+            <p className="mt-2 text-xs text-muted-foreground">
+              {t("app.updated")}: {new Date(path.updated_at).toLocaleString(lang)}
+            </p>
+          ) : null}
           <p className="mt-2 text-xs text-muted-foreground">{t("mobility.bikeNote")}</p>
+        </div>
+
+        <div>
+          <h3 className="mb-2 flex items-center gap-2 text-lg font-bold">
+            <Car className="size-5" /> {t("mobility.traffic")}
+          </h3>
+          <p className="mb-2 text-sm text-muted-foreground">{t("mobility.trafficArea")}</p>
+          <div className="overflow-hidden rounded-2xl border border-border">
+            <TrafficMap />
+          </div>
         </div>
       </div>
     </StatusCard>

@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Building2, ChevronDown, CheckCircle2 } from "lucide-react";
+import { Building2, ChevronDown, CheckCircle2, ExternalLink } from "lucide-react";
 import { StatusCard, StatusBadge } from "@/components/StatusCard";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
-import { COMUNI, fetchWaterAdvisories, type WaterAdvisory } from "@/lib/civic-data";
+import { COMUNI, fetchAvvisi, fetchFontiStato, type Avviso } from "@/lib/civic-data";
 
-function ComuneRow({ name, advisories }: { name: string; advisories: WaterAdvisory[] }) {
+function ComuneRow({ name, avvisi }: { name: string; avvisi: Avviso[] }) {
   const { t, lang } = useI18n();
   const [open, setOpen] = useState(false);
 
@@ -20,10 +20,10 @@ function ComuneRow({ name, advisories }: { name: string; advisories: WaterAdviso
       >
         <span className="flex-1 text-base font-bold">{name}</span>
         <StatusBadge
-          tone={advisories.length > 0 ? "yellow" : "green"}
+          tone={avvisi.length > 0 ? "yellow" : "green"}
           label={
-            advisories.length > 0
-              ? `${advisories.length} ${t("comuni.notices")}`
+            avvisi.length > 0
+              ? `${avvisi.length} ${t("comuni.notices")}`
               : t("comuni.noNotices")
           }
         />
@@ -31,20 +31,30 @@ function ComuneRow({ name, advisories }: { name: string; advisories: WaterAdviso
       </button>
       {open ? (
         <div className="border-t border-border px-4 py-3">
-          {advisories.length === 0 ? (
+          {avvisi.length === 0 ? (
             <p className="flex items-center gap-2 text-sm text-status-green">
-              <CheckCircle2 className="size-4" /> {t("comuni.noNotices")}
+              <CheckCircle2 className="size-4" /> {t("comuni.sourceUnavailable")}
             </p>
           ) : (
             <ul className="grid gap-2">
-              {advisories.map((a) => (
+              {avvisi.map((a) => (
                 <li key={a.id} className="rounded-xl bg-card p-3">
-                  <p className="text-sm font-bold">{a.zone}</p>
+                  <p className="text-sm font-bold">{a.titolo}</p>
                   <p className="text-xs text-muted-foreground">
-                    {t(`water.kind.${a.kind}`)} ·{" "}
-                    {new Date(a.published_at).toLocaleDateString(lang)}
+                    {a.fonte}
+                    {a.data_pubblicazione
+                      ? ` · ${new Date(a.data_pubblicazione).toLocaleDateString(lang)}`
+                      : ""}
                   </p>
-                  {a.description ? <p className="mt-1 text-sm">{a.description}</p> : null}
+                  {a.testo_breve ? <p className="mt-1 text-sm">{a.testo_breve}</p> : null}
+                  <a
+                    href={a.url}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-primary"
+                  >
+                    {t("comuni.open")} <ExternalLink className="size-3" />
+                  </a>
                 </li>
               ))}
             </ul>
@@ -56,33 +66,55 @@ function ComuneRow({ name, advisories }: { name: string; advisories: WaterAdviso
 }
 
 export function ComuniCard() {
-  const { t } = useI18n();
-  const { data } = useQuery({
-    queryKey: ["water-advisories"],
-    queryFn: fetchWaterAdvisories,
-    staleTime: 2 * 60 * 1000,
+  const { t, lang } = useI18n();
+  const { data, isLoading } = useQuery({
+    queryKey: ["avvisi"],
+    queryFn: fetchAvvisi,
+    staleTime: 5 * 60 * 1000,
+  });
+  const { data: fonti } = useQuery({
+    queryKey: ["fonti-stato"],
+    queryFn: fetchFontiStato,
+    staleTime: 5 * 60 * 1000,
   });
 
-  const active = (data ?? []).filter((a) => a.is_active);
-  const total = active.length;
+  const avvisi = data ?? [];
+  const total = avvisi.length;
+  const failing = (fonti ?? []).filter((f) => !f.ok);
+  const lastCheck = (fonti ?? [])
+    .map((f) => f.fetched_at)
+    .filter(Boolean)
+    .sort()
+    .at(-1);
 
   return (
     <StatusCard
       title={t("card.comuni")}
       icon={<Building2 />}
       tone={total > 0 ? "yellow" : "green"}
-      statusLabel={total > 0 ? `${total} ${t("comuni.notices")}` : t("comuni.noNotices")}
+      statusLabel={
+        isLoading
+          ? t("app.loading")
+          : total > 0
+            ? `${total} ${t("comuni.notices")}`
+            : t("comuni.sourceUnavailable")
+      }
       summary={t("comuni.subtitle")}
     >
       <ul className="grid gap-2">
         {COMUNI.map((c) => (
-          <ComuneRow
-            key={c.slug}
-            name={c.name}
-            advisories={active.filter((a) => a.comune === c.name)}
-          />
+          <ComuneRow key={c.slug} name={c.name} avvisi={avvisi.filter((a) => a.comune === c.name)} />
         ))}
       </ul>
+      {failing.length > 0 ? (
+        <p className="mt-3 text-xs text-status-red">
+          {t("comuni.sourceError")}: {failing.map((f) => f.fonte).join(", ")}
+        </p>
+      ) : null}
+      <p className="mt-3 text-xs text-muted-foreground">
+        {t("comuni.sources")}
+        {lastCheck ? ` · ${t("comuni.lastCheck")}: ${new Date(lastCheck).toLocaleString(lang)}` : ""}
+      </p>
     </StatusCard>
   );
 }
