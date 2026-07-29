@@ -177,6 +177,24 @@ const en: Dict = {
   "weather.conditions": "Current conditions",
 };
 
+const enExtra: Dict = {
+  "comuni.open": "Open the notice",
+  "comuni.sourceUnavailable": "No notices available at the moment",
+  "comuni.sourceError": "Source unreachable",
+  "comuni.lastCheck": "Last check",
+  "comuni.sources": "Sources: town councils and Rivieracqua websites",
+  "bathing.strip": "Coastline from west to east",
+  "bathing.legend.ok": "Compliant",
+  "bathing.legend.ko": "Not compliant",
+  "bathing.legend.unknown": "No data",
+  "bathing.points": "monitoring points",
+  "bathing.noData": "ARPAL data not available at the moment",
+  "bathing.offSeason": "Outside the bathing season: latest available data",
+  "bathing.season": "Season",
+  "mobility.trafficArea": "Coastal strip San Bartolomeo → Cervo",
+};
+Object.assign(en, enExtra);
+
 // FR / DE: structure ready, partially populated. Missing keys fall back to EN.
 const fr: Dict = {
   "app.subtitle": "Les services essentiels en un coup d'œil",
