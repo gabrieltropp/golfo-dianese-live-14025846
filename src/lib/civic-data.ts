@@ -157,40 +157,33 @@ export type BalneazionePoint = {
 };
 
 export async function fetchBalneazione(): Promise<BalneazionePoint[]> {
-  const { data, error } = await supabase
-    .from("punti_balneazione")
-    .select(
-      "codice_acqua, comune, nome_punto, ordine_costa, balneazione_stato(stato, stato_raw, classificazione, motivo, anno, data_ultimo_controllo, source_url, fetched_at)",
-    )
-    .order("ordine_costa", { ascending: true });
-  if (error) throw error;
-  type Joined = {
-    codice_acqua: string;
-    comune: string;
-    nome_punto: string;
-    ordine_costa: number;
-    balneazione_stato:
-      | null
-      | Omit<BalneazionePoint, "codice_acqua" | "comune" | "nome_punto" | "ordine_costa">
-      | Array<Omit<BalneazionePoint, "codice_acqua" | "comune" | "nome_punto" | "ordine_costa">>;
-  };
-  return ((data ?? []) as unknown as Joined[]).map((row) => {
-    const s = Array.isArray(row.balneazione_stato)
-      ? row.balneazione_stato[0]
-      : row.balneazione_stato;
+  const [punti, stati] = await Promise.all([
+    supabase
+      .from("punti_balneazione")
+      .select("codice_acqua, comune, nome_punto, ordine_costa")
+      .order("ordine_costa", { ascending: true }),
+    supabase.from("balneazione_stato").select("*"),
+  ]);
+  if (punti.error) throw punti.error;
+  if (stati.error) throw stati.error;
+  const byCode = new Map(
+    (stati.data ?? []).map((s) => [(s as { codice_acqua: string }).codice_acqua, s]),
+  );
+  return (punti.data ?? []).map((row) => {
+    const s = byCode.get(row.codice_acqua) as Record<string, unknown> | undefined;
     return {
       codice_acqua: row.codice_acqua,
       comune: row.comune,
       nome_punto: row.nome_punto,
       ordine_costa: row.ordine_costa,
-      stato: s?.stato ?? "unknown",
-      stato_raw: s?.stato_raw ?? null,
-      classificazione: s?.classificazione ?? null,
-      motivo: s?.motivo ?? null,
-      anno: s?.anno ?? null,
-      data_ultimo_controllo: s?.data_ultimo_controllo ?? null,
-      source_url: s?.source_url ?? null,
-      fetched_at: s?.fetched_at ?? null,
+      stato: ((s?.stato as string) ?? "unknown") as BalneazionePoint["stato"],
+      stato_raw: (s?.stato_raw as string) ?? null,
+      classificazione: (s?.classificazione as string) ?? null,
+      motivo: (s?.motivo as string) ?? null,
+      anno: (s?.anno as number) ?? null,
+      data_ultimo_controllo: (s?.data_ultimo_controllo as string) ?? null,
+      source_url: (s?.source_url as string) ?? null,
+      fetched_at: (s?.fetched_at as string) ?? null,
     };
   });
 }
