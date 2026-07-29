@@ -83,6 +83,7 @@ const it: Dict = {
 };
 
 const en: Dict = {
+  // placeholder-anchor
   "app.title": "Golfo Dianese Live",
   "app.subtitle": "Essential services at a glance",
   "app.updated": "Updated",
