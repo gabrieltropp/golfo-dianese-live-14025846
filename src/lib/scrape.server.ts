@@ -12,10 +12,16 @@ export type AvvisoRow = {
 };
 
 const UA =
-  "Mozilla/5.0 (compatible; GolfoDianeseLive/1.0; +https://golfo-dianese-live.lovable.app)";
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
+
+const HTML_HEADERS = {
+  "User-Agent": UA,
+  Accept: "text/html,application/xhtml+xml",
+  "Accept-Language": "it-IT,it;q=0.9,en;q=0.8",
+};
 
 async function getText(url: string): Promise<string> {
-  const res = await fetch(url, { headers: { "User-Agent": UA, Accept: "text/html" } });
+  const res = await fetch(url, { headers: HTML_HEADERS });
   if (!res.ok) throw new Error(`${url} -> HTTP ${res.status}`);
   return await res.text();
 }
@@ -41,13 +47,18 @@ const MESI: Record<string, number> = {
 
 /** Parses Italian dates such as "29 Aprile 2026". Returns ISO date or null. */
 export function parseItalianDate(raw: string): string | null {
-  const m = clean(raw)
-    .toLowerCase()
-    .match(/(\d{1,2})\s+([a-zàèéìòù]+)\.?\s+(\d{4})/);
+  const text = clean(raw).toLowerCase();
+  const numeric = text.match(/(\d{1,2})[./](\d{1,2})[./](\d{4})/);
+  if (numeric) {
+    const d = new Date(Date.UTC(Number(numeric[3]), Number(numeric[2]) - 1, Number(numeric[1])));
+    return Number.isNaN(d.getTime()) ? null : d.toISOString();
+  }
+  const m = text.match(/(\d{1,2})\s+([a-zàèéìòù]+)\.?\s+(\d{2,4})/);
   if (!m) return null;
   const monthKey = Object.keys(MESI).find((k) => k.startsWith(m[2].slice(0, 3)));
   if (!monthKey) return null;
-  const d = new Date(Date.UTC(Number(m[3]), MESI[monthKey] - 1, Number(m[1])));
+  const year = m[3].length === 2 ? 2000 + Number(m[3]) : Number(m[3]);
+  const d = new Date(Date.UTC(year, MESI[monthKey] - 1, Number(m[1])));
   return Number.isNaN(d.getTime()) ? null : d.toISOString();
 }
 
@@ -94,22 +105,34 @@ type WpPost = {
   content?: { rendered: string };
 };
 
-/** Comune di San Bartolomeo al Mare — WordPress REST API. */
+/** Comune di San Bartolomeo al Mare — news list at /novita/. */
 export async function scrapeSanBartolomeo(now: string): Promise<AvvisoRow[]> {
-  const posts = await getJson<WpPost[]>(
-    "https://www.comune.sanbartolomeoalmare.im.it/wp-json/wp/v2/posts?per_page=20&_fields=link,date_gmt,title,excerpt",
-  );
-  if (!Array.isArray(posts)) throw new Error("San Bartolomeo: risposta inattesa");
-  return posts.map((p) => ({
-    fonte: "Comune di San Bartolomeo al Mare",
-    comune: "San Bartolomeo al Mare",
-    titolo: stripHtml(p.title.rendered),
-    testo_breve: stripHtml(p.excerpt?.rendered ?? "").slice(0, 400) || null,
-    url: p.link,
-    data_pubblicazione: p.date_gmt ? new Date(p.date_gmt + "Z").toISOString() : null,
-    categoria: "Notizia",
-    fetched_at: now,
-  }));
+  const html = await getText("https://www.comune.sanbartolomeoalmare.im.it/novita/");
+  const $ = cheerio.load(html);
+  const rows: AvvisoRow[] = [];
+  const seen = new Set<string>();
+  $("div.card-body").each((_, el) => {
+    const card = $(el);
+    const link = card.find("a h3.card-title").first().parent();
+    const href = link.attr("href");
+    const titolo = clean(card.find("h3.card-title").first().text());
+    if (!href || !titolo || !href.includes("/novita/")) return;
+    if (seen.has(href)) return;
+    seen.add(href);
+    rows.push({
+      fonte: "Comune di San Bartolomeo al Mare",
+      comune: "San Bartolomeo al Mare",
+      titolo,
+      testo_breve: clean(card.find("p.card-text").first().text()) || null,
+      url: href,
+      data_pubblicazione: parseItalianDate(card.find("span.data").first().text()),
+      categoria: clean(card.find("a.category").first().text()) || "Notizia",
+      fetched_at: now,
+    });
+  });
+  if (rows.length === 0)
+    throw new Error("San Bartolomeo: nessun elemento trovato (markup cambiato?)");
+  return rows;
 }
 
 /** Comune di Cervo — legacy CMS, news list at /home/novita.html. */
@@ -149,31 +172,48 @@ const RIVIERACQUA_COMUNI: Array<{ comune: string; patterns: RegExp[] }> = [
   { comune: "Cervo", patterns: [/\bcervo\b/i] },
 ];
 
-/** Rivieracqua — WordPress REST API, category "avvisi", filtered by town names in the body. */
+/** Rivieracqua — "Avvisi" archive, filtered on the article body (one notice may list several towns). */
 export async function scrapeRivieracqua(now: string): Promise<AvvisoRow[]> {
-  const cats = await getJson<Array<{ id: number; slug: string }>>(
-    "https://rivieracqua.it/wp-json/wp/v2/categories?search=avvisi",
-  );
-  const cat = cats.find((c) => c.slug === "avvisi");
-  if (!cat) throw new Error("Rivieracqua: categoria 'avvisi' non trovata");
-  const posts = await getJson<WpPost[]>(
-    `https://rivieracqua.it/wp-json/wp/v2/posts?categories=${cat.id}&per_page=30&_fields=link,date_gmt,title,excerpt,content`,
-  );
+  const html = await getText("https://rivieracqua.it/category/avvisi/");
+  const $ = cheerio.load(html);
+  const items: Array<{ url: string; titolo: string; excerpt: string }> = [];
+  const seen = new Set<string>();
+  $("div.post-item").each((_, el) => {
+    const card = $(el);
+    const href = card.find("a.plain").first().attr("href");
+    const titolo = clean(card.find("h5.post-title").first().text());
+    if (!href || !titolo || seen.has(href)) return;
+    seen.add(href);
+    items.push({
+      url: href,
+      titolo,
+      excerpt: clean(card.find(".from_the_blog_excerpt").first().text()),
+    });
+  });
+  if (items.length === 0)
+    throw new Error("Rivieracqua: nessun avviso trovato (markup cambiato?)");
+
   const rows: AvvisoRow[] = [];
-  for (const p of posts) {
-    const titolo = stripHtml(p.title.rendered);
-    const body = stripHtml(p.content?.rendered ?? "");
-    const haystack = `${titolo} ${body}`;
+  for (const item of items.slice(0, 15)) {
+    let body = item.excerpt;
+    try {
+      const page = await getText(item.url);
+      const $$ = cheerio.load(page);
+      body = clean($$("article, .entry-content, main").first().text()) || body;
+    } catch {
+      // fall back to the excerpt from the archive page
+    }
+    const haystack = `${item.titolo} ${body}`;
     for (const { comune, patterns } of RIVIERACQUA_COMUNI) {
       if (!patterns.some((re) => re.test(haystack))) continue;
       rows.push({
         fonte: "Rivieracqua",
         comune,
-        titolo,
-        testo_breve: (stripHtml(p.excerpt?.rendered ?? "") || body).slice(0, 400) || null,
+        titolo: item.titolo,
+        testo_breve: (item.excerpt || body).slice(0, 400) || null,
         // one article can cover several towns: keep the URL unique per town
-        url: `${p.link}#${comune.toLowerCase().replace(/[^a-z]+/g, "-")}`,
-        data_pubblicazione: p.date_gmt ? new Date(p.date_gmt + "Z").toISOString() : null,
+        url: `${item.url}#${comune.toLowerCase().replace(/[^a-z]+/g, "-")}`,
+        data_pubblicazione: parseItalianDate(item.titolo),
         categoria: "Servizio idrico",
         fetched_at: now,
       });
