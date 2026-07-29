@@ -1,14 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
+import type { AvvisoRow } from "@/lib/scrape.server";
 
 async function run() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const {
-    scrapeDianoMarina,
-    scrapeSanBartolomeo,
-    scrapeCervo,
-    scrapeRivieracqua,
-    type AvvisoRow,
-  } = await import("@/lib/scrape.server");
+  const { scrapeDianoMarina, scrapeSanBartolomeo, scrapeCervo, scrapeRivieracqua } =
+    await import("@/lib/scrape.server");
 
   const now = new Date().toISOString();
   const sources: Array<{ fonte: string; fn: () => Promise<AvvisoRow[]> }> = [
