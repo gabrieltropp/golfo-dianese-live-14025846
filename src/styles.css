@@ -1,7 +1,15 @@
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
-
+@font-face {
+    font-family: 'Kivaera';
+    src: url('fonts/Kivaera.woff2') format('woff2'),
+         url('fonts/Kivaera.woff') format('woff'),
+         url('fonts/Kivaera.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
 @custom-variant dark (&:is(.dark *));
 
 /*
@@ -131,7 +139,7 @@
   --color-sea-mid: var(--sea-mid);
   --color-sky: var(--sky);
   --color-coral: var(--coral);
-  --font-display: "Archivo", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Kivaera", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "Inter Tight", ui-sans-serif, system-ui, sans-serif;
 }
 
