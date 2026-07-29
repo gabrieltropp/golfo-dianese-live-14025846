@@ -54,7 +54,7 @@ function TrafficMap() {
     let cancelled = false;
     const init = () => {
       if (cancelled || !ref.current) return;
-      const g = (window as unknown as { google?: typeof google }).google;
+      const g = (window as unknown as { google?: any }).google;
       if (!g?.maps) return;
       const map = new g.maps.Map(ref.current, {
         center: { lat: 43.9135, lng: 8.075 },
