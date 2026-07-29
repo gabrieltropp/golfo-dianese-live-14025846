@@ -119,6 +119,103 @@ export async function fetchBikePath() {
 export const ARPAL_URL =
   "https://www.arpal.liguria.it/tematiche/mare/balneabilita.html?ANNO=2026&CODICE_ACQUA=IT007008027A001&PROVINCIA=Imperia&COMUNE=Diano+Marina";
 
+export type Avviso = {
+  id: string;
+  fonte: string;
+  comune: string;
+  titolo: string;
+  testo_breve: string | null;
+  url: string;
+  data_pubblicazione: string | null;
+  categoria: string | null;
+  fetched_at: string;
+};
+
+export async function fetchAvvisi() {
+  const { data, error } = await supabase
+    .from("avvisi")
+    .select("*")
+    .order("data_pubblicazione", { ascending: false, nullsFirst: false })
+    .limit(200);
+  if (error) throw error;
+  return (data ?? []) as unknown as Avviso[];
+}
+
+export type BalneazionePoint = {
+  codice_acqua: string;
+  comune: string;
+  nome_punto: string;
+  ordine_costa: number;
+  stato: "compliant" | "non_compliant" | "unknown";
+  stato_raw: string | null;
+  classificazione: string | null;
+  motivo: string | null;
+  anno: number | null;
+  data_ultimo_controllo: string | null;
+  source_url: string | null;
+  fetched_at: string | null;
+};
+
+export async function fetchBalneazione(): Promise<BalneazionePoint[]> {
+  const { data, error } = await supabase
+    .from("punti_balneazione")
+    .select(
+      "codice_acqua, comune, nome_punto, ordine_costa, balneazione_stato(stato, stato_raw, classificazione, motivo, anno, data_ultimo_controllo, source_url, fetched_at)",
+    )
+    .order("ordine_costa", { ascending: true });
+  if (error) throw error;
+  type Joined = {
+    codice_acqua: string;
+    comune: string;
+    nome_punto: string;
+    ordine_costa: number;
+    balneazione_stato:
+      | null
+      | Omit<BalneazionePoint, "codice_acqua" | "comune" | "nome_punto" | "ordine_costa">
+      | Array<Omit<BalneazionePoint, "codice_acqua" | "comune" | "nome_punto" | "ordine_costa">>;
+  };
+  return ((data ?? []) as unknown as Joined[]).map((row) => {
+    const s = Array.isArray(row.balneazione_stato)
+      ? row.balneazione_stato[0]
+      : row.balneazione_stato;
+    return {
+      codice_acqua: row.codice_acqua,
+      comune: row.comune,
+      nome_punto: row.nome_punto,
+      ordine_costa: row.ordine_costa,
+      stato: s?.stato ?? "unknown",
+      stato_raw: s?.stato_raw ?? null,
+      classificazione: s?.classificazione ?? null,
+      motivo: s?.motivo ?? null,
+      anno: s?.anno ?? null,
+      data_ultimo_controllo: s?.data_ultimo_controllo ?? null,
+      source_url: s?.source_url ?? null,
+      fetched_at: s?.fetched_at ?? null,
+    };
+  });
+}
+
+export type FonteStato = {
+  fonte: string;
+  ok: boolean;
+  error: string | null;
+  items: number;
+  last_success_at: string | null;
+  fetched_at: string;
+};
+
+export async function fetchFontiStato() {
+  const { data, error } = await supabase.from("fonti_stato").select("*");
+  if (error) throw error;
+  return (data ?? []) as unknown as FonteStato[];
+}
+
+/** Bathing season in Liguria: April → September. */
+export function isBathingSeason(d = new Date()): boolean {
+  const m = d.getMonth() + 1;
+  return m >= 4 && m <= 9;
+}
+
 const WEATHER_TEXT: Record<string, Record<string, string>> = {
   clear: { it: "Sereno", en: "Clear", fr: "Dégagé", de: "Klar" },
   mainlyClear: { it: "Poco nuvoloso", en: "Mainly clear", fr: "Peu nuageux", de: "Heiter" },
