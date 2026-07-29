@@ -82,6 +82,24 @@ const it: Dict = {
   "weather.conditions": "Condizioni attuali",
 };
 
+const itExtra: Dict = {
+  "comuni.open": "Apri l'avviso",
+  "comuni.sourceUnavailable": "Nessun avviso disponibile al momento",
+  "comuni.sourceError": "Fonte non raggiungibile",
+  "comuni.lastCheck": "Ultimo controllo",
+  "comuni.sources": "Fonti: siti dei Comuni e Rivieracqua",
+  "bathing.strip": "Litorale da ovest a est",
+  "bathing.legend.ok": "Conforme",
+  "bathing.legend.ko": "Non conforme",
+  "bathing.legend.unknown": "Dato non disponibile",
+  "bathing.points": "punti di analisi",
+  "bathing.noData": "Dati ARPAL non disponibili al momento",
+  "bathing.offSeason": "Fuori stagione balneare: ultimi dati disponibili",
+  "bathing.season": "Stagione",
+  "mobility.trafficArea": "Fascia costiera San Bartolomeo → Cervo",
+};
+Object.assign(it, itExtra);
+
 const en: Dict = {
   "app.title": "Golfo Dianese Live",
   "app.subtitle": "Essential services at a glance",
@@ -158,6 +176,24 @@ const en: Dict = {
   "mobility.routeBlocked": "Interruption reported",
   "weather.conditions": "Current conditions",
 };
+
+const enExtra: Dict = {
+  "comuni.open": "Open the notice",
+  "comuni.sourceUnavailable": "No notices available at the moment",
+  "comuni.sourceError": "Source unreachable",
+  "comuni.lastCheck": "Last check",
+  "comuni.sources": "Sources: town councils and Rivieracqua websites",
+  "bathing.strip": "Coastline from west to east",
+  "bathing.legend.ok": "Compliant",
+  "bathing.legend.ko": "Not compliant",
+  "bathing.legend.unknown": "No data",
+  "bathing.points": "monitoring points",
+  "bathing.noData": "ARPAL data not available at the moment",
+  "bathing.offSeason": "Outside the bathing season: latest available data",
+  "bathing.season": "Season",
+  "mobility.trafficArea": "Coastal strip San Bartolomeo → Cervo",
+};
+Object.assign(en, enExtra);
 
 // FR / DE: structure ready, partially populated. Missing keys fall back to EN.
 const fr: Dict = {

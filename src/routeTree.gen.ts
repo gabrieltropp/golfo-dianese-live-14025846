@@ -12,6 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiPublicHooksRefreshBalneazioneRouteImport } from './routes/api/public/hooks/refresh-balneazione'
+import { Route as ApiPublicHooksRefreshAvvisiRouteImport } from './routes/api/public/hooks/refresh-avvisi'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -28,35 +30,71 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksRefreshBalneazioneRoute =
+  ApiPublicHooksRefreshBalneazioneRouteImport.update({
+    id: '/api/public/hooks/refresh-balneazione',
+    path: '/api/public/hooks/refresh-balneazione',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksRefreshAvvisiRoute =
+  ApiPublicHooksRefreshAvvisiRouteImport.update({
+    id: '/api/public/hooks/refresh-avvisi',
+    path: '/api/public/hooks/refresh-avvisi',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/api/public/hooks/refresh-avvisi': typeof ApiPublicHooksRefreshAvvisiRoute
+  '/api/public/hooks/refresh-balneazione': typeof ApiPublicHooksRefreshBalneazioneRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/api/public/hooks/refresh-avvisi': typeof ApiPublicHooksRefreshAvvisiRoute
+  '/api/public/hooks/refresh-balneazione': typeof ApiPublicHooksRefreshBalneazioneRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/api/public/hooks/refresh-avvisi': typeof ApiPublicHooksRefreshAvvisiRoute
+  '/api/public/hooks/refresh-balneazione': typeof ApiPublicHooksRefreshBalneazioneRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/sitemap.xml'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/sitemap.xml'
+    | '/api/public/hooks/refresh-avvisi'
+    | '/api/public/hooks/refresh-balneazione'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/sitemap.xml'
-  id: '__root__' | '/' | '/admin' | '/sitemap.xml'
+  to:
+    | '/'
+    | '/admin'
+    | '/sitemap.xml'
+    | '/api/public/hooks/refresh-avvisi'
+    | '/api/public/hooks/refresh-balneazione'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/sitemap.xml'
+    | '/api/public/hooks/refresh-avvisi'
+    | '/api/public/hooks/refresh-balneazione'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  ApiPublicHooksRefreshAvvisiRoute: typeof ApiPublicHooksRefreshAvvisiRoute
+  ApiPublicHooksRefreshBalneazioneRoute: typeof ApiPublicHooksRefreshBalneazioneRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -82,6 +120,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/refresh-balneazione': {
+      id: '/api/public/hooks/refresh-balneazione'
+      path: '/api/public/hooks/refresh-balneazione'
+      fullPath: '/api/public/hooks/refresh-balneazione'
+      preLoaderRoute: typeof ApiPublicHooksRefreshBalneazioneRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/refresh-avvisi': {
+      id: '/api/public/hooks/refresh-avvisi'
+      path: '/api/public/hooks/refresh-avvisi'
+      fullPath: '/api/public/hooks/refresh-avvisi'
+      preLoaderRoute: typeof ApiPublicHooksRefreshAvvisiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -89,6 +141,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ApiPublicHooksRefreshAvvisiRoute: ApiPublicHooksRefreshAvvisiRoute,
+  ApiPublicHooksRefreshBalneazioneRoute: ApiPublicHooksRefreshBalneazioneRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
