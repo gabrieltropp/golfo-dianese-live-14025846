@@ -82,6 +82,24 @@ const it: Dict = {
   "weather.conditions": "Condizioni attuali",
 };
 
+const itExtra: Dict = {
+  "comuni.open": "Apri l'avviso",
+  "comuni.sourceUnavailable": "Nessun avviso disponibile al momento",
+  "comuni.sourceError": "Fonte non raggiungibile",
+  "comuni.lastCheck": "Ultimo controllo",
+  "comuni.sources": "Fonti: siti dei Comuni e Rivieracqua",
+  "bathing.strip": "Litorale da ovest a est",
+  "bathing.legend.ok": "Conforme",
+  "bathing.legend.ko": "Non conforme",
+  "bathing.legend.unknown": "Dato non disponibile",
+  "bathing.points": "punti di analisi",
+  "bathing.noData": "Dati ARPAL non disponibili al momento",
+  "bathing.offSeason": "Fuori stagione balneare: ultimi dati disponibili",
+  "bathing.season": "Stagione",
+  "mobility.trafficArea": "Fascia costiera San Bartolomeo → Cervo",
+};
+Object.assign(it, itExtra);
+
 const en: Dict = {
   "app.title": "Golfo Dianese Live",
   "app.subtitle": "Essential services at a glance",
