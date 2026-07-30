@@ -4,11 +4,15 @@ import { Building2, ChevronDown, CheckCircle2, ExternalLink } from "lucide-react
 import { StatusCard, StatusBadge } from "@/components/StatusCard";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
-import { COMUNI, fetchAvvisi, fetchFontiStato, type Avviso } from "@/lib/civic-data";
+import { COMUNI, comuneAvvisi, fetchAvvisi, fetchFontiStato, type Avviso } from "@/lib/civic-data";
+import { useAutoTranslate } from "@/lib/use-auto-translate";
 
 function ComuneRow({ name, avvisi }: { name: string; avvisi: Avviso[] }) {
   const { t, lang } = useI18n();
   const [open, setOpen] = useState(false);
+  const tr = useAutoTranslate(
+    open ? avvisi.flatMap((a) => [a.titolo, a.testo_breve ?? ""]).filter(Boolean) : [],
+  );
 
   return (
     <li className="overflow-hidden rounded-2xl border border-border bg-secondary/40">
@@ -39,14 +43,14 @@ function ComuneRow({ name, avvisi }: { name: string; avvisi: Avviso[] }) {
             <ul className="grid gap-2">
               {avvisi.map((a) => (
                 <li key={a.id} className="rounded-xl bg-card p-3">
-                  <p className="text-sm font-bold">{a.titolo}</p>
+                  <p className="text-sm font-bold">{tr(a.titolo)}</p>
                   <p className="text-xs text-muted-foreground">
                     {a.fonte}
                     {a.data_pubblicazione
                       ? ` · ${new Date(a.data_pubblicazione).toLocaleDateString(lang)}`
                       : ""}
                   </p>
-                  {a.testo_breve ? <p className="mt-1 text-sm">{a.testo_breve}</p> : null}
+                  {a.testo_breve ? <p className="mt-1 text-sm">{tr(a.testo_breve)}</p> : null}
                   <a
                     href={a.url}
                     target="_blank"
