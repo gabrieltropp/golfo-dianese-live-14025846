@@ -50,9 +50,10 @@ const MESI: Record<string, number> = {
 /** Parses Italian dates such as "29 Aprile 2026". Returns ISO date or null. */
 export function parseItalianDate(raw: string): string | null {
   const text = clean(raw).toLowerCase();
-  const numeric = text.match(/(\d{1,2})[./](\d{1,2})[./](\d{4})/);
+  const numeric = text.match(/(\d{1,2})[./](\d{1,2})[./](\d{2}|\d{4})/);
   if (numeric) {
-    const d = new Date(Date.UTC(Number(numeric[3]), Number(numeric[2]) - 1, Number(numeric[1])));
+    const year = numeric[3].length === 2 ? 2000 + Number(numeric[3]) : Number(numeric[3]);
+    const d = new Date(Date.UTC(year, Number(numeric[2]) - 1, Number(numeric[1])));
     return Number.isNaN(d.getTime()) ? null : d.toISOString();
   }
   const m = text.match(/(\d{1,2})\s+([a-zàèéìòù]+)\.?\s+(\d{2,4})/);
