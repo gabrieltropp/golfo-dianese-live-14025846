@@ -168,13 +168,50 @@ export async function scrapeCervo(now: string): Promise<AvvisoRow[]> {
   return rows;
 }
 
-const RIVIERACQUA_COMUNI: Array<{ comune: string; patterns: RegExp[] }> = [
-  { comune: "Diano Marina", patterns: [/diano\s+marina/i] },
-  { comune: "San Bartolomeo al Mare", patterns: [/s(an|\.)\s*bartolomeo/i] },
-  { comune: "Cervo", patterns: [/\bcervo\b/i] },
+/** Comuni recognised inside Rivieracqua notices (whole province, not only the gulf). */
+const COMUNI_PATTERNS: Array<{ comune: string; pattern: RegExp }> = [
+  { comune: "Diano Marina", pattern: /diano\s+marina/i },
+  { comune: "Diano Castello", pattern: /diano\s+castello/i },
+  { comune: "Diano San Pietro", pattern: /diano\s+s(an|\.)\s*pietro/i },
+  { comune: "Diano Arentino", pattern: /diano\s+arentino/i },
+  { comune: "San Bartolomeo al Mare", pattern: /s(an|\.)\s*bartolomeo(\s+al\s+mare)?/i },
+  { comune: "Cervo", pattern: /\bcervo\b/i },
+  { comune: "Imperia", pattern: /\bimperia\b/i },
+  { comune: "Sanremo", pattern: /\bsan\s?remo\b/i },
+  { comune: "Taggia", pattern: /\btaggia\b/i },
+  { comune: "Arma di Taggia", pattern: /arma\s+di\s+taggia/i },
+  { comune: "Ventimiglia", pattern: /\bventimiglia\b/i },
+  { comune: "Bordighera", pattern: /\bbordighera\b/i },
+  { comune: "Ospedaletti", pattern: /\bospedaletti\b/i },
+  { comune: "Riva Ligure", pattern: /riva\s+ligure/i },
+  { comune: "Santo Stefano al Mare", pattern: /s(anto|\.)\s*stefano\s+al\s+mare/i },
+  { comune: "Cipressa", pattern: /\bcipressa\b/i },
+  { comune: "Costarainera", pattern: /\bcostarainera\b/i },
+  { comune: "San Lorenzo al Mare", pattern: /s(an|\.)\s*lorenzo\s+al\s+mare/i },
+  { comune: "Civezza", pattern: /\bcivezza\b/i },
+  { comune: "Pietrabruna", pattern: /\bpietrabruna\b/i },
+  { comune: "Dolcedo", pattern: /\bdolcedo\b/i },
+  { comune: "Pontedassio", pattern: /\bpontedassio\b/i },
+  { comune: "Chiusanico", pattern: /\bchiusanico\b/i },
+  { comune: "Villa Faraldi", pattern: /villa\s+faraldi/i },
+  { comune: "Andora", pattern: /\bandora\b/i },
+  { comune: "Cesio", pattern: /\bcesio\b/i },
+  { comune: "Borgomaro", pattern: /\bborgomaro\b/i },
 ];
 
-/** Rivieracqua — "Avvisi" archive, filtered on the article body (one notice may list several towns). */
+export function extractComuniCitati(text: string): string[] {
+  return COMUNI_PATTERNS.filter(({ pattern }) => pattern.test(text)).map((c) => c.comune);
+}
+
+/** Pulls an "intervento" date/time hint from the notice body, when present. */
+export function extractDataIntervento(text: string): string | null {
+  const m =
+    text.match(/data\s+(?:e\s+ora\s+)?(?:dell'?\s*)?intervento\s*[:\-–]?\s*([^.;\n]{4,120})/i) ??
+    text.match(/(?:il\s+giorno|nella\s+giornata\s+di)\s+([^.;\n]{4,120})/i);
+  return m ? clean(m[1]) : null;
+}
+
+/** Rivieracqua — "Avvisi" archive: every notice is kept, with the towns it mentions. */
 export async function scrapeRivieracqua(now: string): Promise<AvvisoRow[]> {
   const html = await getText("https://rivieracqua.it/category/avvisi/");
   const $ = cheerio.load(html);
@@ -206,20 +243,19 @@ export async function scrapeRivieracqua(now: string): Promise<AvvisoRow[]> {
       // fall back to the excerpt from the archive page
     }
     const haystack = `${item.titolo} ${body}`;
-    for (const { comune, patterns } of RIVIERACQUA_COMUNI) {
-      if (!patterns.some((re) => re.test(haystack))) continue;
-      rows.push({
-        fonte: "Rivieracqua",
-        comune,
-        titolo: item.titolo,
-        testo_breve: (item.excerpt || body).slice(0, 400) || null,
-        // one article can cover several towns: keep the URL unique per town
-        url: `${item.url}#${comune.toLowerCase().replace(/[^a-z]+/g, "-")}`,
-        data_pubblicazione: parseItalianDate(item.titolo),
-        categoria: "Servizio idrico",
-        fetched_at: now,
-      });
-    }
+    const comuni = extractComuniCitati(haystack);
+    rows.push({
+      fonte: "Rivieracqua",
+      comune: comuni[0] ?? "Provincia di Imperia",
+      titolo: item.titolo,
+      testo_breve: (item.excerpt || body).slice(0, 400) || null,
+      url: item.url,
+      data_pubblicazione: parseItalianDate(item.titolo),
+      categoria: "Servizio idrico",
+      fetched_at: now,
+      comuni_citati: comuni,
+      data_intervento: extractDataIntervento(haystack),
+    });
   }
   return rows;
 }
