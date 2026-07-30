@@ -3,13 +3,17 @@
 @import "tw-animate-css";
 @font-face {
     font-family: 'Kivaera';
-    src: url('fonts/Kivaera.woff2') format('woff2'),
-         url('fonts/Kivaera.woff') format('woff'),
-         url('fonts/Kivaera.ttf') format('truetype');
+    src: url('/__l5e/assets-v1/f8f341ed-e094-47b4-90dc-5bc2261656a5/Kivaera.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
     font-display: swap;
 }
+
+.font-display {
+  font-family: 'Kivaera', ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: 0.01em;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 /*
