@@ -10,15 +10,6 @@
     font-style: normal;
     font-display: swap;
 }
-@font-face {
-    font-family: 'Rifieka';
-    src: url('https://font.download') format('woff2'),
-         url('https://font.download') format('woff'),
-         url('https://font.download') format('truetype');
-    font-weight: normal;
-    font-style: normal;
-    font-display: swap;
-}
 @custom-variant dark (&:is(.dark *));
 
 /*
@@ -148,7 +139,7 @@
   --color-sea-mid: var(--sea-mid);
   --color-sky: var(--sky);
   --color-coral: var(--coral);
-  --font-display: "Rifieka", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Kivaera", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "Inter Tight", ui-sans-serif, system-ui, sans-serif;
 }
 
