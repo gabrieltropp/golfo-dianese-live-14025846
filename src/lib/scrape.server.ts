@@ -206,9 +206,9 @@ export function extractComuniCitati(text: string): string[] {
 /** Pulls an "intervento" date/time hint from the notice body, when present. */
 export function extractDataIntervento(text: string): string | null {
   const m =
-    text.match(/data\s+(?:e\s+ora\s+)?(?:dell'?\s*)?intervento\s*[:\-–]?\s*([^.;\n]{4,120})/i) ??
-    text.match(/(?:il\s+giorno|nella\s+giornata\s+di)\s+([^.;\n]{4,120})/i);
-  return m ? clean(m[1]) : null;
+    text.match(/data\s+(?:e\s+ora\s+)?(?:dell'?\s*)?intervento\s*[:_*\-–\s]*([^_*.;\n]{4,120})/i) ??
+    text.match(/(?:il\s+giorno|nella\s+giornata\s+di)\s+([^_*.;\n]{4,120})/i);
+  return m ? clean(m[1]).replace(/^[:_*\s-]+|[:_*\s-]+$/g, "") || null : null;
 }
 
 /** Rivieracqua — "Avvisi" archive: every notice is kept, with the towns it mentions. */
