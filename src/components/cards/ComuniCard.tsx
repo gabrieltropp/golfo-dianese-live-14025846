@@ -82,7 +82,7 @@ export function ComuniCard() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const avvisi = data ?? [];
+  const avvisi = (data ?? []).filter((a) => a.fonte !== "Rivieracqua");
   const total = avvisi.length;
   const failing = (fonti ?? []).filter((f) => !f.ok);
   const lastCheck = (fonti ?? [])
@@ -107,7 +107,7 @@ export function ComuniCard() {
     >
       <ul className="grid gap-2">
         {COMUNI.map((c) => (
-          <ComuneRow key={c.slug} name={c.name} avvisi={avvisi.filter((a) => a.comune === c.name)} />
+          <ComuneRow key={c.slug} name={c.name} avvisi={comuneAvvisi(avvisi, c.name)} />
         ))}
       </ul>
       {failing.length > 0 ? (
