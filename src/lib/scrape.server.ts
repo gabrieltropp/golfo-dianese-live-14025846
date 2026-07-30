@@ -238,7 +238,9 @@ export async function scrapeRivieracqua(now: string): Promise<AvvisoRow[]> {
     try {
       const page = await getText(item.url);
       const $$ = cheerio.load(page);
-      body = clean($$("article, .entry-content, main").first().text()) || body;
+      const content = $$(".entry-content").first();
+      content.find(".blog-share, .social-icons, script, style, nav").remove();
+      body = clean(content.find("p").text()) || clean(content.text()) || body;
     } catch {
       // fall back to the excerpt from the archive page
     }
