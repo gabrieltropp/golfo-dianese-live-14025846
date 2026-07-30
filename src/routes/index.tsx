@@ -46,9 +46,12 @@ function Index() {
       <div className="relative z-10">
       <header className="surface-sea px-5 pb-8 pt-6">
         <div className="mx-auto flex max-w-4xl flex-col gap-4">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <span className="flex size-12 items-center justify-center overflow-hidden rounded-2xl bg-primary-foreground/15">
+          <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+            <div className="flex w-full justify-end sm:hidden">
+              <LanguageSwitcher />
+            </div>
+            <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
+              <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-primary-foreground/15 sm:size-12">
                 <img
                   src="/icons/icon-512.png"
                   alt="Golfo Dianese Live"
@@ -57,14 +60,16 @@ function Index() {
                   height={48}
                 />
               </span>
-              <div>
-                <h1 className="text-2xl font-extrabold leading-tight sm:text-3xl">
+              <div className="min-w-0">
+                <h1 className="font-display whitespace-nowrap text-[clamp(1.35rem,6.4vw,2.5rem)] font-extrabold leading-tight">
                   {t("app.title")}
                 </h1>
-                <p className="text-sm opacity-90">{t("app.subtitle")}</p>
+                <p className="truncate text-sm opacity-90">{t("app.subtitle")}</p>
               </div>
             </div>
-            <LanguageSwitcher />
+            <div className="hidden sm:block">
+              <LanguageSwitcher />
+            </div>
           </div>
         </div>
       </header>

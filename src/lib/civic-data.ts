@@ -129,7 +129,36 @@ export type Avviso = {
   data_pubblicazione: string | null;
   categoria: string | null;
   fetched_at: string;
+  comuni_citati: string[] | null;
+  data_intervento: string | null;
 };
+
+/** Source label written by the Rivieracqua scraper. Routing is by source, never by keywords. */
+export const FONTE_RIVIERACQUA = "Rivieracqua";
+
+/** The three towns of the Golfo Dianese used to scope Rivieracqua notices. */
+export const GOLFO_COMUNI = ["Diano Marina", "San Bartolomeo al Mare", "Cervo"] as const;
+
+export function golfoComuniOf(a: Avviso): string[] {
+  const cited = a.comuni_citati ?? [];
+  return GOLFO_COMUNI.filter((c) => cited.includes(c));
+}
+
+/** Rivieracqua notices that mention at least one town of the gulf. */
+export function rivieracquaAvvisi(avvisi: Avviso[]): Avviso[] {
+  return avvisi
+    .filter((a) => a.fonte === FONTE_RIVIERACQUA && golfoComuniOf(a).length > 0)
+    .sort(
+      (a, b) =>
+        new Date(b.data_pubblicazione ?? b.fetched_at).getTime() -
+        new Date(a.data_pubblicazione ?? a.fetched_at).getTime(),
+    );
+}
+
+/** Town-council notices only: Rivieracqua never appears in the Comuni section. */
+export function comuneAvvisi(avvisi: Avviso[], comune: string): Avviso[] {
+  return avvisi.filter((a) => a.fonte !== FONTE_RIVIERACQUA && a.comune === comune);
+}
 
 export async function fetchAvvisi() {
   const { data, error } = await supabase

@@ -33,7 +33,9 @@ export type Database = {
         Row: {
           categoria: string | null
           comune: string
+          comuni_citati: string[]
           created_at: string
+          data_intervento: string | null
           data_pubblicazione: string | null
           fetched_at: string
           fonte: string
@@ -46,7 +48,9 @@ export type Database = {
         Insert: {
           categoria?: string | null
           comune: string
+          comuni_citati?: string[]
           created_at?: string
+          data_intervento?: string | null
           data_pubblicazione?: string | null
           fetched_at?: string
           fonte: string
@@ -59,7 +63,9 @@ export type Database = {
         Update: {
           categoria?: string | null
           comune?: string
+          comuni_citati?: string[]
           created_at?: string
+          data_intervento?: string | null
           data_pubblicazione?: string | null
           fetched_at?: string
           fonte?: string
