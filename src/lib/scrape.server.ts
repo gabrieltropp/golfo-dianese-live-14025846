@@ -9,6 +9,8 @@ export type AvvisoRow = {
   data_pubblicazione: string | null;
   categoria: string | null;
   fetched_at: string;
+  comuni_citati?: string[];
+  data_intervento?: string | null;
 };
 
 const UA =
