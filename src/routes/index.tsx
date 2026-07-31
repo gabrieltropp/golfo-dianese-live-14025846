@@ -45,7 +45,7 @@ function Index() {
           preload="auto"
           className="h-full w-full max-w-full object-cover"
         />
-        <div className="absolute inset-0 bg-sea-deep/45" />
+        <div className="absolute inset-0 bg-sea-deep/100" />
       </div>
       <div className="relative z-10">
       <header className="px-5 pb-8 pt-6" style={{ backgroundImage: "var(--gradient-sea)" }}>
