@@ -11,11 +11,11 @@ function BikeRoute({ blocked }: { blocked: boolean }) {
   // Highlight the Diano Marina - San Bartolomeo leg when the path is not fully open.
   const brokenLeg = 1;
   return (
-    <div className="rounded-2xl border border-border bg-secondary/40 p-4">
+    <div className="glass-soft w-full max-w-full overflow-hidden rounded-2xl p-4">
       <div className="flex items-center">
         {STOPS.map((stop, i) => (
           <div key={stop} className="flex flex-1 items-center last:flex-none">
-            <span className="size-3 shrink-0 rounded-full bg-foreground/70" aria-hidden="true" />
+            <span className="size-3 shrink-0 rounded-full bg-sand/80" aria-hidden="true" />
             {i < STOPS.length - 1 ? (
               <span
                 className={
@@ -91,7 +91,7 @@ function TrafficMap() {
     };
   }, []);
 
-  return <div ref={ref} className="h-64 w-full" />;
+  return <div ref={ref} className="h-64 w-full max-w-full" />;
 }
 
 export function MobilityCard() {
@@ -149,9 +149,10 @@ export function MobilityCard() {
             <Car className="size-5" /> {t("mobility.traffic")}
           </h3>
           <p className="mb-2 text-sm text-muted-foreground">{t("mobility.trafficArea")}</p>
-          <div className="overflow-hidden rounded-2xl border border-border">
+          <div className="w-full max-w-full overflow-hidden rounded-2xl border border-border">
             <TrafficMap />
           </div>
+          <p className="mt-2 text-xs text-muted-foreground">{t("app.live")}</p>
         </div>
       </div>
     </StatusCard>

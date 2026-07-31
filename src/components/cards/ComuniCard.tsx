@@ -1,10 +1,17 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Building2, ChevronDown, CheckCircle2, ExternalLink } from "lucide-react";
-import { StatusCard, StatusBadge } from "@/components/StatusCard";
+import { StatusCard, StatusBadge, FreshnessNote } from "@/components/StatusCard";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
-import { COMUNI, comuneAvvisi, fetchAvvisi, fetchFontiStato, type Avviso } from "@/lib/civic-data";
+import {
+  COMUNI,
+  comuneAvvisi,
+  fetchAvvisi,
+  fetchFontiStato,
+  freshnessOf,
+  type Avviso,
+} from "@/lib/civic-data";
 import { useAutoTranslate } from "@/lib/use-auto-translate";
 
 function ComuneRow({ name, avvisi }: { name: string; avvisi: Avviso[] }) {
@@ -15,7 +22,7 @@ function ComuneRow({ name, avvisi }: { name: string; avvisi: Avviso[] }) {
   );
 
   return (
-    <li className="overflow-hidden rounded-2xl border border-border bg-secondary/40">
+    <li className="glass-soft overflow-hidden rounded-2xl">
       <button
         type="button"
         aria-expanded={open}
@@ -42,7 +49,7 @@ function ComuneRow({ name, avvisi }: { name: string; avvisi: Avviso[] }) {
           ) : (
             <ul className="grid gap-2">
               {avvisi.map((a) => (
-                <li key={a.id} className="rounded-xl bg-card p-3">
+                <li key={a.id} className="rounded-xl bg-sand/5 p-3">
                   <p className="text-sm font-bold">{tr(a.titolo)}</p>
                   <p className="text-xs text-muted-foreground">
                     {a.fonte}
@@ -85,11 +92,11 @@ export function ComuniCard() {
   const avvisi = (data ?? []).filter((a) => a.fonte !== "Rivieracqua");
   const total = avvisi.length;
   const failing = (fonti ?? []).filter((f) => !f.ok);
-  const lastCheck = (fonti ?? [])
-    .map((f) => f.fetched_at)
-    .filter(Boolean)
-    .sort()
-    .at(-1);
+  const fresh = freshnessOf(fonti, [
+    "Comune di Diano Marina",
+    "Comune di San Bartolomeo al Mare",
+    "Comune di Cervo",
+  ]);
 
   return (
     <StatusCard
@@ -115,10 +122,12 @@ export function ComuniCard() {
           {t("comuni.sourceError")}: {failing.map((f) => f.fonte).join(", ")}
         </p>
       ) : null}
-      <p className="mt-3 text-xs text-muted-foreground">
-        {t("comuni.sources")}
-        {lastCheck ? ` · ${t("comuni.lastCheck")}: ${new Date(lastCheck).toLocaleString(lang)}` : ""}
-      </p>
+      <p className="mt-3 text-xs text-muted-foreground">{t("comuni.sources")}</p>
+      <FreshnessNote
+        lastSuccessAt={fresh.lastSuccessAt}
+        failStreak={fresh.failStreak}
+        locale={lang}
+      />
     </StatusCard>
   );
 }
