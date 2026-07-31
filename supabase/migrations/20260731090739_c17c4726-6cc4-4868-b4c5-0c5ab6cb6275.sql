@@ -1,0 +1,1 @@
+ALTER TABLE public.fonti_stato ADD COLUMN IF NOT EXISTS fail_streak integer NOT NULL DEFAULT 0;

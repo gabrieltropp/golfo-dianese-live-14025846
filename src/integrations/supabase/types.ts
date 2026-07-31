@@ -200,6 +200,7 @@ export type Database = {
         Row: {
           created_at: string
           error: string | null
+          fail_streak: number
           fetched_at: string
           fonte: string
           items: number
@@ -210,6 +211,7 @@ export type Database = {
         Insert: {
           created_at?: string
           error?: string | null
+          fail_streak?: number
           fetched_at?: string
           fonte: string
           items?: number
@@ -220,6 +222,7 @@ export type Database = {
         Update: {
           created_at?: string
           error?: string | null
+          fail_streak?: number
           fetched_at?: string
           fonte?: string
           items?: number
