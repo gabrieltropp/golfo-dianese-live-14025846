@@ -88,6 +88,16 @@ const it: Dict = {
 };
 
 const itExtra: Dict = {
+  "app.eyebrow": "Stato del servizio",
+  "app.lastSuccess": "Ultimo aggiornamento riuscito",
+  "app.staleSince": "Aggiornamento non disponibile dalle ore",
+  "app.live": "Dato in tempo reale",
+  "admin.updates": "Stato aggiornamenti",
+  "admin.source": "Fonte",
+  "admin.lastOk": "Ultimo successo",
+  "admin.lastTry": "Ultimo tentativo",
+  "admin.state": "Esito",
+  "admin.errors": "Errori consecutivi",
   "comuni.open": "Apri l'avviso",
   "comuni.sourceUnavailable": "Nessun avviso disponibile al momento",
   "comuni.sourceError": "Fonte non raggiungibile",
@@ -188,6 +198,16 @@ const en: Dict = {
 };
 
 const enExtra: Dict = {
+  "app.eyebrow": "Service status",
+  "app.lastSuccess": "Last successful update",
+  "app.staleSince": "Updates unavailable since",
+  "app.live": "Live data",
+  "admin.updates": "Update status",
+  "admin.source": "Source",
+  "admin.lastOk": "Last success",
+  "admin.lastTry": "Last attempt",
+  "admin.state": "Result",
+  "admin.errors": "Consecutive errors",
   "comuni.open": "Open the notice",
   "comuni.sourceUnavailable": "No notices available at the moment",
   "comuni.sourceError": "Source unreachable",
