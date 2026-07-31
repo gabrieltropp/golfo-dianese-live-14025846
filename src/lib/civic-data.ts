@@ -224,7 +224,27 @@ export type FonteStato = {
   items: number;
   last_success_at: string | null;
   fetched_at: string;
+  fail_streak?: number;
 };
+
+/** A source is considered stale after 3 consecutive failed runs. */
+export const STALE_AFTER_FAILURES = 3;
+
+export function fonteOf(fonti: FonteStato[] | undefined, fonte: string): FonteStato | undefined {
+  return (fonti ?? []).find((f) => f.fonte === fonte);
+}
+
+/** Aggregates several sources into one freshness signal for a card. */
+export function freshnessOf(fonti: FonteStato[] | undefined, fonti_names: string[]) {
+  const rows = (fonti ?? []).filter((f) => fonti_names.includes(f.fonte));
+  const lastSuccessAt = rows
+    .map((r) => r.last_success_at)
+    .filter((v): v is string => Boolean(v))
+    .sort()
+    .at(-1) ?? null;
+  const failStreak = rows.reduce((max, r) => Math.max(max, r.fail_streak ?? 0), 0);
+  return { lastSuccessAt, failStreak, rows };
+}
 
 export async function fetchFontiStato() {
   const { data, error } = await supabase.from("fonti_stato").select("*");
