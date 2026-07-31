@@ -32,6 +32,7 @@ async function run() {
         items: results.length,
         last_success_at: now,
         fetched_at: now,
+        fail_streak: 0,
       },
       { onConflict: "fonte" },
     );
@@ -41,7 +42,7 @@ async function run() {
     console.error("[refresh-balneazione]", message);
     const { data: prev } = await supabaseAdmin
       .from("fonti_stato")
-      .select("last_success_at")
+      .select("last_success_at, fail_streak")
       .eq("fonte", "ARPAL Balneazione")
       .maybeSingle();
     await supabaseAdmin.from("fonti_stato").upsert(
@@ -52,6 +53,7 @@ async function run() {
         items: 0,
         last_success_at: prev?.last_success_at ?? null,
         fetched_at: now,
+        fail_streak: (prev?.fail_streak ?? 0) + 1,
       },
       { onConflict: "fonte" },
     );

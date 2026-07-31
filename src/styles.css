@@ -75,44 +75,53 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(0.975 0.012 220);
-  --foreground: oklch(0.22 0.06 250);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.22 0.06 250);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.22 0.06 250);
-  --primary: oklch(0.35 0.11 248);
-  --primary-foreground: oklch(0.98 0.01 220);
-  --secondary: oklch(0.93 0.035 225);
-  --secondary-foreground: oklch(0.28 0.09 248);
-  --muted: oklch(0.94 0.02 225);
-  --muted-foreground: oklch(0.45 0.04 245);
-  --accent: oklch(0.72 0.13 225);
-  --accent-foreground: oklch(0.18 0.06 250);
-  --destructive: oklch(0.55 0.2 27);
-  --destructive-foreground: oklch(0.98 0.01 220);
-  --border: oklch(0.88 0.025 228);
-  --input: oklch(0.88 0.025 228);
-  --ring: oklch(0.55 0.12 235);
+  /* Riviera palette: deep navy sea, warm sand, sunset coral, sea-foam, signal red */
+  --background: oklch(0.26 0.072 250);
+  --foreground: oklch(0.951 0.014 79);
+  --card: oklch(0.3 0.075 250);
+  --card-foreground: oklch(0.951 0.014 79);
+  --popover: oklch(0.28 0.072 250);
+  --popover-foreground: oklch(0.951 0.014 79);
+  --primary: oklch(0.672 0.152 42);
+  --primary-foreground: oklch(0.2 0.06 250);
+  --secondary: oklch(0.38 0.062 246);
+  --secondary-foreground: oklch(0.951 0.014 79);
+  --muted: oklch(0.36 0.055 246);
+  --muted-foreground: oklch(0.83 0.02 79);
+  --accent: oklch(0.834 0.068 175);
+  --accent-foreground: oklch(0.22 0.06 250);
+  --destructive: oklch(0.518 0.174 30);
+  --destructive-foreground: oklch(0.951 0.014 79);
+  --border: oklch(1 0 0 / 0.16);
+  --input: oklch(1 0 0 / 0.22);
+  --ring: oklch(0.672 0.152 42);
 
-  /* Civic status palette (traffic light) */
-  --status-green: oklch(0.6 0.16 150);
-  --status-green-fg: oklch(0.99 0.01 150);
-  --status-yellow: oklch(0.83 0.16 92);
-  --status-yellow-fg: oklch(0.25 0.07 92);
-  --status-orange: oklch(0.7 0.18 48);
-  --status-orange-fg: oklch(0.2 0.06 48);
-  --status-red: oklch(0.55 0.21 27);
-  --status-red-fg: oklch(0.99 0.01 27);
-  --status-grey: oklch(0.62 0.02 240);
-  --status-grey-fg: oklch(0.99 0 0);
+  /* Civic status palette */
+  --status-green: oklch(0.834 0.068 175);
+  --status-green-fg: oklch(0.22 0.06 250);
+  --status-yellow: oklch(0.84 0.14 86);
+  --status-yellow-fg: oklch(0.24 0.07 86);
+  --status-orange: oklch(0.672 0.152 42);
+  --status-orange-fg: oklch(0.19 0.06 250);
+  --status-red: oklch(0.518 0.174 30);
+  --status-red-fg: oklch(0.965 0.014 79);
+  --status-grey: oklch(0.55 0.03 245);
+  --status-grey-fg: oklch(0.96 0.01 79);
 
-  --sea-deep: oklch(0.27 0.09 250);
-  --sea-mid: oklch(0.42 0.12 240);
-  --sky: oklch(0.78 0.11 220);
-  --coral: oklch(0.7 0.17 35);
-  --gradient-sea: linear-gradient(160deg, var(--sea-deep), var(--sea-mid) 60%, var(--sky));
-  --shadow-card: 0 12px 28px -18px oklch(0.27 0.09 250 / 0.55);
+  --sea-deep: oklch(0.26 0.072 250);
+  --sea-mid: oklch(0.36 0.09 245);
+  --sky: oklch(0.834 0.068 175);
+  --sand: oklch(0.951 0.014 79);
+  --coral: oklch(0.672 0.152 42);
+  --gradient-sea: linear-gradient(
+    170deg,
+    oklch(0.26 0.072 250 / 0.92),
+    oklch(0.26 0.072 250 / 0.55) 70%,
+    oklch(0.26 0.072 250 / 0.1)
+  );
+  --glass-bg: oklch(0.26 0.072 250 / 0.55);
+  --glass-border: oklch(1 0 0 / 0.15);
+  --shadow-card: 0 18px 40px -24px oklch(0.12 0.05 250 / 0.85);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -143,6 +152,7 @@
   --color-sea-mid: var(--sea-mid);
   --color-sky: var(--sky);
   --color-coral: var(--coral);
+  --color-sand: var(--sand);
   --font-display: "Kivaera", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "Inter Tight", ui-sans-serif, system-ui, sans-serif;
 }
@@ -154,6 +164,19 @@
 
 @utility card-elevated {
   box-shadow: var(--shadow-card);
+}
+
+/* Real glassmorphism: the sunrise video stays perceptible behind every panel. */
+@utility glass {
+  background-color: var(--glass-bg);
+  backdrop-filter: blur(18px) saturate(135%);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-card);
+}
+
+@utility glass-soft {
+  background-color: oklch(1 0 0 / 0.08);
+  border: 1px solid var(--glass-border);
 }
 
 .dark {
@@ -196,11 +219,20 @@
     border-color: var(--color-border);
   }
 
+  html,
+  body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    overscroll-behavior-x: none;
+  }
+
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
 
   h1,
@@ -208,5 +240,22 @@
   h3 {
     font-family: var(--font-display);
     letter-spacing: -0.02em;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--coral);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }

@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { ChevronDown } from "lucide-react";
+import { AlertTriangle, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
 
@@ -26,8 +26,51 @@ export function StatusBadge({ tone, label }: { tone: StatusTone; label: string }
   );
 }
 
+/**
+ * Freshness note: shows the last SUCCESSFUL update of a source and warns loudly
+ * when the scraper has failed several consecutive runs.
+ */
+export function FreshnessNote({
+  lastSuccessAt,
+  failStreak = 0,
+  locale,
+}: {
+  lastSuccessAt: string | null | undefined;
+  failStreak?: number;
+  locale: string;
+}) {
+  const { t } = useI18n();
+  const stale = failStreak >= 3;
+  const when = lastSuccessAt
+    ? new Date(lastSuccessAt).toLocaleString(locale, {
+        day: "2-digit",
+        month: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : null;
+
+  if (stale) {
+    return (
+      <p className="mt-3 flex items-start gap-2 rounded-xl bg-status-red/20 px-3 py-2 text-xs font-semibold text-status-red">
+        <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+        <span>
+          {t("app.staleSince")} {when ?? "—"}
+        </span>
+      </p>
+    );
+  }
+
+  return (
+    <p className="mt-3 text-xs text-muted-foreground">
+      {t("app.lastSuccess")}: {when ?? "—"}
+    </p>
+  );
+}
+
 export function StatusCard({
   title,
+  eyebrow,
   icon,
   tone,
   statusLabel,
@@ -35,6 +78,7 @@ export function StatusCard({
   children,
 }: {
   title: string;
+  eyebrow?: string;
   icon: ReactNode;
   tone: StatusTone;
   statusLabel: string;
@@ -45,16 +89,16 @@ export function StatusCard({
   const { t } = useI18n();
 
   return (
-    <section className="card-elevated overflow-hidden rounded-3xl border border-border bg-card">
+    <section className="glass overflow-hidden rounded-3xl">
       <button
         type="button"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center gap-4 p-5 text-left transition-colors hover:bg-secondary/60"
+        className="flex w-full items-center gap-4 p-5 text-left transition-colors hover:bg-sand/5"
       >
         <span
           className={cn(
-            "flex size-16 shrink-0 items-center justify-center rounded-2xl [&_svg]:size-9",
+            "flex size-14 shrink-0 items-center justify-center rounded-2xl [&_svg]:size-8 sm:size-16 sm:[&_svg]:size-9",
             TONE_BG[tone],
           )}
           aria-hidden="true"
@@ -62,7 +106,12 @@ export function StatusCard({
           {icon}
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block text-xl font-bold leading-tight text-foreground">{title}</span>
+          <span className="block text-[0.68rem] font-bold uppercase tracking-[0.18em] text-accent/90">
+            {eyebrow ?? t("app.eyebrow")}
+          </span>
+          <span className="font-display mt-0.5 block text-xl font-bold leading-tight text-foreground">
+            {title}
+          </span>
           <span className="mt-2 flex flex-wrap items-center gap-2">
             <StatusBadge tone={tone} label={statusLabel} />
           </span>

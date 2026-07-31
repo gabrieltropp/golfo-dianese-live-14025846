@@ -44,7 +44,7 @@ const LABEL_BY_COLOR: Record<AlertColor, Record<string, string>> = {
 function DayBlock({ title, day }: { title: string; day: AlertDay }) {
   const { t } = useI18n();
   return (
-    <div className="rounded-2xl bg-secondary/60 p-4">
+    <div className="glass-soft rounded-2xl p-4">
       <h3 className="text-base font-bold text-foreground">{title}</h3>
       <p className="mb-2 text-sm text-muted-foreground">{day.allerta.descrizione}</p>
       <dl>
@@ -136,18 +136,18 @@ export function WeatherCard() {
 
       {weatherQuery.data ? (
         <>
-          <div className="mb-3 rounded-2xl bg-sky/25 p-4">
+          <div className="glass-soft mb-3 rounded-2xl p-4">
             <p className="text-sm font-semibold text-muted-foreground">
               {t("weather.conditions")}
             </p>
             <p className="text-2xl font-bold">{conditions}</p>
           </div>
           <div className="mb-4 flex gap-3">
-          <div className="flex-1 rounded-2xl bg-sky/25 p-4">
+          <div className="glass-soft flex-1 rounded-2xl p-4">
             <p className="text-sm font-semibold text-muted-foreground">{t("weather.temp")}</p>
             <p className="text-3xl font-bold">{weatherQuery.data.temperature}°C</p>
           </div>
-          <div className="flex-1 rounded-2xl bg-sky/25 p-4">
+          <div className="glass-soft flex-1 rounded-2xl p-4">
             <p className="text-sm font-semibold text-muted-foreground">{t("weather.wind")}</p>
             <p className="text-3xl font-bold">{weatherQuery.data.wind} km/h</p>
           </div>
@@ -172,7 +172,9 @@ export function WeatherCard() {
         </p>
       )}
 
-      <p className="mt-4 text-xs text-muted-foreground">{t("weather.source")}</p>
+      <p className="mt-4 text-xs text-muted-foreground">
+        {t("weather.source")} · {t("app.live")}
+      </p>
     </StatusCard>
   );
 }

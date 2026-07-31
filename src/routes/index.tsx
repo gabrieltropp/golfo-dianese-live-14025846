@@ -30,8 +30,12 @@ function Index() {
   const { t } = useI18n();
 
   return (
-    <div className="relative min-h-screen bg-background">
-      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden="true">
+    <div className="relative min-h-screen w-full max-w-full overflow-x-hidden bg-background">
+      <div
+        className="pointer-events-none fixed inset-0 z-0 w-full overflow-hidden bg-sea-deep"
+        aria-hidden="true"
+        style={{ height: "100dvh" }}
+      >
         <video
           src={bgVideo.url}
           autoPlay
@@ -39,19 +43,19 @@ function Index() {
           loop
           playsInline
           preload="auto"
-          className="size-full object-cover opacity-100"
+          className="h-full w-full max-w-full object-cover"
         />
-        <div className="absolute inset-0 bg-background/10" />
+        <div className="absolute inset-0 bg-sea-deep/45" />
       </div>
       <div className="relative z-10">
-      <header className="surface-sea px-5 pb-8 pt-6">
+      <header className="px-5 pb-8 pt-6" style={{ backgroundImage: "var(--gradient-sea)" }}>
         <div className="mx-auto flex max-w-4xl flex-col gap-4">
           <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
             <div className="flex w-full justify-end sm:hidden">
               <LanguageSwitcher />
             </div>
             <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
-              <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-primary-foreground/15 sm:size-12">
+              <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-sand/15 sm:size-12">
                 <img
                   src="/icons/icon-512.png"
                   alt="Golfo Dianese Live"
@@ -61,10 +65,10 @@ function Index() {
                 />
               </span>
               <div className="min-w-0">
-                <h1 className="font-display whitespace-nowrap text-[clamp(1.35rem,6.4vw,2.5rem)] font-extrabold leading-tight">
+                <h1 className="font-display whitespace-nowrap text-[clamp(1.45rem,6.8vw,2.9rem)] font-extrabold leading-tight text-sand">
                   {t("app.title")}
                 </h1>
-                <p className="truncate text-sm opacity-90">{t("app.subtitle")}</p>
+                <p className="truncate text-sm text-sand/85">{t("app.subtitle")}</p>
               </div>
             </div>
             <div className="hidden sm:block">
@@ -85,7 +89,7 @@ function Index() {
         </div>
       </main>
 
-      <footer className="border-t border-border bg-secondary/60 px-5 py-8">
+      <footer className="glass mt-4 border-x-0 border-b-0 px-5 py-8">
         <div className="mx-auto max-w-4xl text-sm text-muted-foreground">
           <p className="mb-3">{t("footer.disclaimer")}</p>
           <p className="mb-2 font-semibold text-foreground">{t("footer.sources")}</p>

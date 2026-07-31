@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { Droplet, Wrench, CheckCircle2, ExternalLink, CalendarClock } from "lucide-react";
-import { StatusCard, StatusBadge } from "@/components/StatusCard";
+import { StatusCard, StatusBadge, FreshnessNote } from "@/components/StatusCard";
 import { useI18n } from "@/lib/i18n";
 import {
   fetchAvvisi,
   fetchFontiStato,
+  freshnessOf,
   golfoComuniOf,
   rivieracquaAvvisi,
   type Avviso,
@@ -18,7 +19,7 @@ function AdvisoryItem({ a, tr }: { a: Avviso; tr: (s: string) => string }) {
   const golfo = golfoComuniOf(a);
 
   return (
-    <li className="rounded-2xl border border-border bg-secondary/50 p-4">
+    <li className="glass-soft rounded-2xl p-4">
       <div className="mb-2 flex flex-wrap items-center gap-2">
         <StatusBadge tone="yellow" label={t("water.kind.works")} />
         {a.data_pubblicazione ? (
@@ -77,7 +78,7 @@ export function WaterCard() {
   );
 
   const stato = (fonti ?? []).find((f) => f.fonte === "Rivieracqua");
-  const lastCheck = stato?.fetched_at;
+  const fresh = freshnessOf(fonti, ["Rivieracqua"]);
 
   return (
     <StatusCard
@@ -108,10 +109,12 @@ export function WaterCard() {
       {stato && !stato.ok ? (
         <p className="mt-3 text-xs text-status-red">{t("comuni.sourceError")}: Rivieracqua</p>
       ) : null}
-      <p className="mt-4 text-xs text-muted-foreground">
-        {t("water.source")}
-        {lastCheck ? ` · ${t("comuni.lastCheck")}: ${new Date(lastCheck).toLocaleString(lang)}` : ""}
-      </p>
+      <p className="mt-4 text-xs text-muted-foreground">{t("water.source")}</p>
+      <FreshnessNote
+        lastSuccessAt={fresh.lastSuccessAt}
+        failStreak={fresh.failStreak}
+        locale={lang}
+      />
       <a
         href={RIVIERACQUA_URL}
         target="_blank"

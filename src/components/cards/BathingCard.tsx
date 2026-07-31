@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Waves, ExternalLink, Info } from "lucide-react";
-import { StatusCard, DetailRow, type StatusTone } from "@/components/StatusCard";
+import { StatusCard, DetailRow, FreshnessNote, type StatusTone } from "@/components/StatusCard";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
 import {
   ARPAL_URL,
   fetchBalneazione,
+  fetchFontiStato,
+  freshnessOf,
   isBathingSeason,
   type BalneazionePoint,
 } from "@/lib/civic-data";
@@ -17,7 +19,17 @@ const DOT: Record<BalneazionePoint["stato"], string> = {
   unknown: "bg-muted-foreground/50",
 };
 
-function StripChart({
+const GLOW: Record<BalneazionePoint["stato"], string> = {
+  compliant: "shadow-[0_0_0_4px_var(--status-green)]/20",
+  non_compliant: "shadow-[0_0_0_4px_var(--status-red)]/20",
+  unknown: "",
+};
+
+/**
+ * Signature element: a "coastal horizon" — a thin shoreline with each ARPAL
+ * monitoring point rendered as a small lit buoy on a mast.
+ */
+function CoastalHorizon({
   points,
   selected,
   onSelect,
@@ -27,39 +39,43 @@ function StripChart({
   onSelect: (code: string) => void;
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-secondary/40 p-4">
-      <div className="flex items-center">
-        {points.map((p, i) => (
-          <div key={p.codice_acqua} className="flex flex-1 items-center last:flex-none">
+    <div className="glass-soft w-full max-w-full overflow-hidden rounded-2xl px-3 pb-3 pt-5">
+      <div className="relative flex w-full items-end">
+        {points.map((p) => {
+          const active = selected === p.codice_acqua;
+          return (
             <button
+              key={p.codice_acqua}
               type="button"
               title={p.nome_punto}
               aria-label={p.nome_punto}
-              aria-pressed={selected === p.codice_acqua}
+              aria-pressed={active}
               onClick={() => onSelect(p.codice_acqua)}
-              className={cn(
-                "size-4 shrink-0 rounded-full ring-offset-2 ring-offset-background transition",
-                DOT[p.stato],
-                selected === p.codice_acqua && "ring-2 ring-foreground",
-              )}
-            />
-            {i < points.length - 1 ? (
+              className="group flex min-w-0 flex-1 flex-col items-center gap-1 rounded-lg pb-1"
+            >
               <span
-                aria-hidden="true"
                 className={cn(
-                  "h-1.5 flex-1",
-                  p.stato === "non_compliant" || points[i + 1].stato === "non_compliant"
-                    ? "bg-status-red/70"
-                    : p.stato === "unknown" && points[i + 1].stato === "unknown"
-                      ? "bg-muted-foreground/30"
-                      : "bg-status-green/70",
+                  "size-3 rounded-full transition-transform",
+                  DOT[p.stato],
+                  GLOW[p.stato],
+                  active && "scale-150",
                 )}
+                aria-hidden="true"
               />
-            ) : null}
-          </div>
-        ))}
+              <span
+                className={cn("h-3 w-px", active ? "bg-sand/80" : "bg-sand/35")}
+                aria-hidden="true"
+              />
+            </button>
+          );
+        })}
+        {/* shoreline */}
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-sand/60 to-transparent"
+        />
       </div>
-      <div className="mt-2 flex justify-between text-[0.7rem] font-semibold text-muted-foreground">
+      <div className="mt-2 flex justify-between text-[0.7rem] font-semibold uppercase tracking-widest text-muted-foreground">
         <span>Ovest · Imperia</span>
         <span>Est · Cervo</span>
       </div>
@@ -75,6 +91,12 @@ export function BathingCard() {
     queryFn: fetchBalneazione,
     staleTime: 30 * 60 * 1000,
   });
+  const { data: fonti } = useQuery({
+    queryKey: ["fonti-stato"],
+    queryFn: fetchFontiStato,
+    staleTime: 5 * 60 * 1000,
+  });
+  const fresh = freshnessOf(fonti, ["ARPAL Balneazione"]);
 
   const points = data ?? [];
   const hasData = points.length > 0;
@@ -91,11 +113,6 @@ export function BathingCard() {
         : t("bathing.compliant");
 
   const current = points.find((p) => p.codice_acqua === selected) ?? null;
-  const lastUpdate = points
-    .map((p) => p.fetched_at)
-    .filter(Boolean)
-    .sort()
-    .at(-1);
 
   const byComune = points.reduce<Record<string, BalneazionePoint[]>>((acc, p) => {
     (acc[p.comune] ??= []).push(p);
@@ -122,7 +139,7 @@ export function BathingCard() {
       ) : (
         <>
           <p className="mb-2 text-sm font-semibold text-muted-foreground">{t("bathing.strip")}</p>
-          <StripChart points={points} selected={selected} onSelect={setSelected} />
+          <CoastalHorizon points={points} selected={selected} onSelect={setSelected} />
 
           <ul className="mt-3 flex flex-wrap gap-3 text-xs font-semibold">
             <li className="flex items-center gap-1.5">
@@ -138,7 +155,7 @@ export function BathingCard() {
           </ul>
 
           {current ? (
-            <dl className="mt-4 rounded-2xl border border-border bg-secondary/40 p-3">
+            <dl className="glass-soft mt-4 rounded-2xl p-3">
               <DetailRow label={t("bathing.point")} value={current.nome_punto} />
               <DetailRow label="Comune" value={current.comune} />
               <DetailRow
@@ -173,7 +190,7 @@ export function BathingCard() {
                       <button
                         type="button"
                         onClick={() => setSelected(p.codice_acqua)}
-                        className="flex w-full items-center gap-2 rounded-xl px-2 py-1 text-left text-sm hover:bg-secondary/60"
+                        className="flex w-full items-center gap-2 rounded-xl px-2 py-1 text-left text-sm hover:bg-sand/10"
                       >
                         <span className={cn("size-3 shrink-0 rounded-full", DOT[p.stato])} />
                         <span className="flex-1">{p.nome_punto}</span>
@@ -194,15 +211,15 @@ export function BathingCard() {
         </>
       )}
 
-      <p className="mt-4 flex gap-2 rounded-2xl bg-coral/15 p-3 text-sm">
+      <p className="mt-4 flex gap-2 rounded-2xl bg-coral/20 p-3 text-sm">
         <Info className="mt-0.5 size-5 shrink-0 text-coral" aria-hidden="true" />
         <span>{t("bathing.frequency")}</span>
       </p>
-      {lastUpdate ? (
-        <p className="mt-2 text-xs text-muted-foreground">
-          {t("app.updated")}: {new Date(lastUpdate).toLocaleString(lang)}
-        </p>
-      ) : null}
+      <FreshnessNote
+        lastSuccessAt={fresh.lastSuccessAt}
+        failStreak={fresh.failStreak}
+        locale={lang}
+      />
       <a
         href={current?.source_url ?? points[0]?.source_url ?? ARPAL_URL}
         target="_blank"
