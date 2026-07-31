@@ -6,7 +6,78 @@ import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
-import { fetchBathingWater, fetchBikePath, fetchWaterAdvisories } from "@/lib/civic-data";
+import {
+  fetchBathingWater,
+  fetchBikePath,
+  fetchFontiStato,
+  fetchWaterAdvisories,
+  STALE_AFTER_FAILURES,
+} from "@/lib/civic-data";
+
+function UpdateStatusPanel({ locale }: { locale: string }) {
+  const { t } = useI18n();
+  const { data } = useQuery({
+    queryKey: ["fonti-stato"],
+    queryFn: fetchFontiStato,
+    refetchInterval: 60_000,
+  });
+  const rows = [...(data ?? [])].sort((a, b) => a.fonte.localeCompare(b.fonte));
+
+  return (
+    <section className="rounded-3xl border border-border bg-card p-5">
+      <h2 className="mb-3 text-xl font-bold">{t("admin.updates")}</h2>
+      <div className="w-full max-w-full overflow-x-auto">
+        <table className="w-full min-w-[34rem] text-left text-sm">
+          <thead className="text-xs uppercase tracking-wide text-muted-foreground">
+            <tr>
+              <th className="py-2 pr-3">{t("admin.source")}</th>
+              <th className="py-2 pr-3">{t("admin.state")}</th>
+              <th className="py-2 pr-3">{t("admin.lastOk")}</th>
+              <th className="py-2 pr-3">{t("admin.lastTry")}</th>
+              <th className="py-2">{t("admin.errors")}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((f) => {
+              const streak = f.fail_streak ?? 0;
+              return (
+                <tr key={f.fonte} className="border-t border-border/60 align-top">
+                  <td className="py-2 pr-3 font-semibold">{f.fonte}</td>
+                  <td className="py-2 pr-3">
+                    <span
+                      className={
+                        "rounded-full px-2 py-0.5 text-xs font-bold " +
+                        (f.ok
+                          ? "bg-status-green text-status-green-foreground"
+                          : "bg-status-red text-status-red-foreground")
+                      }
+                    >
+                      {f.ok ? "OK" : "ERR"}
+                    </span>
+                    {f.error ? (
+                      <p className="mt-1 max-w-[16rem] text-xs text-muted-foreground">{f.error}</p>
+                    ) : null}
+                  </td>
+                  <td className="py-2 pr-3">
+                    {f.last_success_at ? new Date(f.last_success_at).toLocaleString(locale) : "—"}
+                  </td>
+                  <td className="py-2 pr-3">{new Date(f.fetched_at).toLocaleString(locale)}</td>
+                  <td
+                    className={
+                      "py-2 font-bold " + (streak >= STALE_AFTER_FAILURES ? "text-status-red" : "")
+                    }
+                  >
+                    {streak}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
 
 export const Route = createFileRoute("/admin")({
   ssr: false,
@@ -90,7 +161,7 @@ function LoginForm() {
 }
 
 function Panel() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const qc = useQueryClient();
   const bathing = useQuery({ queryKey: ["bathing-water"], queryFn: fetchBathingWater });
   const advisories = useQuery({ queryKey: ["water-advisories"], queryFn: fetchWaterAdvisories });
@@ -151,6 +222,7 @@ function Panel() {
 
   return (
     <div className="grid gap-5">
+      <UpdateStatusPanel locale={lang} />
       <section className={card}>
         <h2 className="mb-3 text-xl font-bold">{t("card.bathing")}</h2>
         {(bathing.data ?? []).map((b) => (
