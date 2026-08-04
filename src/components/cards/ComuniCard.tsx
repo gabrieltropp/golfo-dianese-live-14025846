@@ -172,7 +172,6 @@ export function ComuniCard() {
           />
         ))}
       </ul>
-      <SegnalaForm />
       {failing.length > 0 ? (
         <p className="mt-3 text-xs text-status-red">
           {t("comuni.sourceError")}: {failing.map((f) => f.fonte).join(", ")}
