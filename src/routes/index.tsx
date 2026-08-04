@@ -7,6 +7,7 @@ import { WaterCard } from "@/components/cards/WaterCard";
 import { MobilityCard } from "@/components/cards/MobilityCard";
 import { WebcamCard } from "@/components/cards/WebcamCard";
 import { ComuniCard } from "@/components/cards/ComuniCard";
+import { SegnalaForm } from "@/components/SegnalaForm";
 import { useI18n } from "@/lib/i18n";
 import { ARPAL_URL } from "@/lib/civic-data";
 import bgVideo from "@/assets/sunrisediano.mp4.asset.json";
@@ -47,7 +48,7 @@ function Index() {
         />
         <div className="absolute inset-0 bg-sea-deep/0" />
       </div>
-      <div className="relative z-10">
+      <div className="relative z-10 flex min-h-screen flex-col">
       <header className="px-5 pb-8 pt-6" style={{ backgroundImage: "var(--gradient-sea)" }}>
         <div className="mx-auto flex max-w-4xl flex-col gap-4">
           <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
@@ -78,7 +79,7 @@ function Index() {
         </div>
       </header>
 
-      <main className="mx-auto -mt-4 max-w-4xl px-4 pb-12">
+      <main className="mx-auto -mt-4 w-full max-w-4xl flex-1 px-4 pb-12">
         <div className="grid gap-4 md:grid-cols-2 md:items-start">
           <WeatherCard />
           <BathingCard />
@@ -86,6 +87,9 @@ function Index() {
           <WaterCard />
           <MobilityCard />
           <ComuniCard />
+        </div>
+        <div className="mt-4 md:mx-auto md:max-w-2xl">
+          <SegnalaForm />
         </div>
       </main>
 

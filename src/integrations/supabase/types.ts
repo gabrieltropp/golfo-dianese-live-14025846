@@ -259,6 +259,57 @@ export type Database = {
         }
         Relationships: []
       }
+      segnalazioni: {
+        Row: {
+          categoria: string | null
+          comune: string
+          contatto: string | null
+          created_at: string
+          data_invio: string
+          data_verifica: string | null
+          fonte_verifica_url: string | null
+          foto_url: string | null
+          id: string
+          ip_hash: string | null
+          note_moderazione: string | null
+          stato: string
+          testo: string
+          updated_at: string
+        }
+        Insert: {
+          categoria?: string | null
+          comune: string
+          contatto?: string | null
+          created_at?: string
+          data_invio?: string
+          data_verifica?: string | null
+          fonte_verifica_url?: string | null
+          foto_url?: string | null
+          id?: string
+          ip_hash?: string | null
+          note_moderazione?: string | null
+          stato?: string
+          testo: string
+          updated_at?: string
+        }
+        Update: {
+          categoria?: string | null
+          comune?: string
+          contatto?: string | null
+          created_at?: string
+          data_invio?: string
+          data_verifica?: string | null
+          fonte_verifica_url?: string | null
+          foto_url?: string | null
+          id?: string
+          ip_hash?: string | null
+          note_moderazione?: string | null
+          stato?: string
+          testo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       water_advisories: {
         Row: {
           comune: string

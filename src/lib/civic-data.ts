@@ -146,8 +146,14 @@ export function golfoComuniOf(a: Avviso): string[] {
 
 /** Rivieracqua notices that mention at least one town of the gulf. */
 export function rivieracquaAvvisi(avvisi: Avviso[]): Avviso[] {
+  const now = Date.now();
   return avvisi
-    .filter((a) => a.fonte === FONTE_RIVIERACQUA && golfoComuniOf(a).length > 0)
+    .filter(
+      (a) =>
+        a.fonte === FONTE_RIVIERACQUA &&
+        golfoComuniOf(a).length > 0 &&
+        now - new Date(a.data_pubblicazione ?? a.fetched_at).getTime() <= AVVISO_MAX_AGE_MS,
+    )
     .sort(
       (a, b) =>
         new Date(b.data_pubblicazione ?? b.fetched_at).getTime() -
@@ -155,9 +161,22 @@ export function rivieracquaAvvisi(avvisi: Avviso[]): Avviso[] {
     );
 }
 
+/** Notices older than one month are not shown (and are purged server-side). */
+export const AVVISO_MAX_AGE_MS = 31 * 24 * 60 * 60 * 1000;
+
+function avvisoDate(a: Avviso): number {
+  return new Date(a.data_pubblicazione ?? a.fetched_at).getTime();
+}
+
+export function isRecente(a: Avviso, now = Date.now()): boolean {
+  return now - avvisoDate(a) <= AVVISO_MAX_AGE_MS;
+}
+
 /** Town-council notices only: Rivieracqua never appears in the Comuni section. */
 export function comuneAvvisi(avvisi: Avviso[], comune: string): Avviso[] {
-  return avvisi.filter((a) => a.fonte !== FONTE_RIVIERACQUA && a.comune === comune);
+  return avvisi
+    .filter((a) => a.fonte !== FONTE_RIVIERACQUA && a.comune === comune && isRecente(a))
+    .sort((a, b) => avvisoDate(b) - avvisoDate(a));
 }
 
 export async function fetchAvvisi() {
