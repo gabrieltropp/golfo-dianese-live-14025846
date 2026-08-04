@@ -146,8 +146,14 @@ export function golfoComuniOf(a: Avviso): string[] {
 
 /** Rivieracqua notices that mention at least one town of the gulf. */
 export function rivieracquaAvvisi(avvisi: Avviso[]): Avviso[] {
+  const now = Date.now();
   return avvisi
-    .filter((a) => a.fonte === FONTE_RIVIERACQUA && golfoComuniOf(a).length > 0)
+    .filter(
+      (a) =>
+        a.fonte === FONTE_RIVIERACQUA &&
+        golfoComuniOf(a).length > 0 &&
+        now - new Date(a.data_pubblicazione ?? a.fetched_at).getTime() <= AVVISO_MAX_AGE_MS,
+    )
     .sort(
       (a, b) =>
         new Date(b.data_pubblicazione ?? b.fetched_at).getTime() -
