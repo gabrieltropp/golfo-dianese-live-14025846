@@ -7,6 +7,7 @@ import { WaterCard } from "@/components/cards/WaterCard";
 import { MobilityCard } from "@/components/cards/MobilityCard";
 import { WebcamCard } from "@/components/cards/WebcamCard";
 import { ComuniCard } from "@/components/cards/ComuniCard";
+import { SegnalaForm } from "@/components/SegnalaForm";
 import { useI18n } from "@/lib/i18n";
 import { ARPAL_URL } from "@/lib/civic-data";
 import bgVideo from "@/assets/sunrisediano.mp4.asset.json";
@@ -86,6 +87,9 @@ function Index() {
           <WaterCard />
           <MobilityCard />
           <ComuniCard />
+        </div>
+        <div className="mt-4 md:mx-auto md:max-w-2xl">
+          <SegnalaForm />
         </div>
       </main>
 
