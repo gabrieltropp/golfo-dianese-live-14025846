@@ -13,7 +13,7 @@ import {
   type Avviso,
 } from "@/lib/civic-data";
 import { useAutoTranslate } from "@/lib/use-auto-translate";
-import { SegnalaForm } from "@/components/SegnalaForm";
+
 import {
   fetchSegnalazioniVerificate,
   segnalazioniOf,
