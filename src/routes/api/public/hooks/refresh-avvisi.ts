@@ -63,6 +63,15 @@ async function run() {
     }
   }
 
+  // Retention: notices older than one month are removed.
+  const cutoff = new Date(Date.now() - 31 * 24 * 60 * 60 * 1000).toISOString();
+  await supabaseAdmin.from("avvisi").delete().lt("data_pubblicazione", cutoff);
+  await supabaseAdmin
+    .from("avvisi")
+    .delete()
+    .is("data_pubblicazione", null)
+    .lt("fetched_at", cutoff);
+
   return Response.json({ ok: true, at: now, report });
 }
 
