@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiPublicSegnalaRouteImport } from './routes/api/public/segnala'
 import { Route as ApiPublicHooksRefreshBalneazioneRouteImport } from './routes/api/public/hooks/refresh-balneazione'
 import { Route as ApiPublicHooksRefreshAvvisiRouteImport } from './routes/api/public/hooks/refresh-avvisi'
 
@@ -28,6 +29,11 @@ const AdminRoute = AdminRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicSegnalaRoute = ApiPublicSegnalaRouteImport.update({
+  id: '/api/public/segnala',
+  path: '/api/public/segnala',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicHooksRefreshBalneazioneRoute =
@@ -47,6 +53,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/api/public/segnala': typeof ApiPublicSegnalaRoute
   '/api/public/hooks/refresh-avvisi': typeof ApiPublicHooksRefreshAvvisiRoute
   '/api/public/hooks/refresh-balneazione': typeof ApiPublicHooksRefreshBalneazioneRoute
 }
@@ -54,6 +61,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/api/public/segnala': typeof ApiPublicSegnalaRoute
   '/api/public/hooks/refresh-avvisi': typeof ApiPublicHooksRefreshAvvisiRoute
   '/api/public/hooks/refresh-balneazione': typeof ApiPublicHooksRefreshBalneazioneRoute
 }
@@ -62,6 +70,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/api/public/segnala': typeof ApiPublicSegnalaRoute
   '/api/public/hooks/refresh-avvisi': typeof ApiPublicHooksRefreshAvvisiRoute
   '/api/public/hooks/refresh-balneazione': typeof ApiPublicHooksRefreshBalneazioneRoute
 }
@@ -71,6 +80,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/sitemap.xml'
+    | '/api/public/segnala'
     | '/api/public/hooks/refresh-avvisi'
     | '/api/public/hooks/refresh-balneazione'
   fileRoutesByTo: FileRoutesByTo
@@ -78,6 +88,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/sitemap.xml'
+    | '/api/public/segnala'
     | '/api/public/hooks/refresh-avvisi'
     | '/api/public/hooks/refresh-balneazione'
   id:
@@ -85,6 +96,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/sitemap.xml'
+    | '/api/public/segnala'
     | '/api/public/hooks/refresh-avvisi'
     | '/api/public/hooks/refresh-balneazione'
   fileRoutesById: FileRoutesById
@@ -93,6 +105,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  ApiPublicSegnalaRoute: typeof ApiPublicSegnalaRoute
   ApiPublicHooksRefreshAvvisiRoute: typeof ApiPublicHooksRefreshAvvisiRoute
   ApiPublicHooksRefreshBalneazioneRoute: typeof ApiPublicHooksRefreshBalneazioneRoute
 }
@@ -120,6 +133,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/segnala': {
+      id: '/api/public/segnala'
+      path: '/api/public/segnala'
+      fullPath: '/api/public/segnala'
+      preLoaderRoute: typeof ApiPublicSegnalaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/refresh-balneazione': {
       id: '/api/public/hooks/refresh-balneazione'
       path: '/api/public/hooks/refresh-balneazione'
@@ -141,6 +161,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ApiPublicSegnalaRoute: ApiPublicSegnalaRoute,
   ApiPublicHooksRefreshAvvisiRoute: ApiPublicHooksRefreshAvvisiRoute,
   ApiPublicHooksRefreshBalneazioneRoute: ApiPublicHooksRefreshBalneazioneRoute,
 }
