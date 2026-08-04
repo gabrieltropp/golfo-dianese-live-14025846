@@ -47,7 +47,7 @@ function Index() {
         />
         <div className="absolute inset-0 bg-sea-deep/0" />
       </div>
-      <div className="relative z-10">
+      <div className="relative z-10 flex min-h-screen flex-col">
       <header className="px-5 pb-8 pt-6" style={{ backgroundImage: "var(--gradient-sea)" }}>
         <div className="mx-auto flex max-w-4xl flex-col gap-4">
           <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
@@ -78,7 +78,7 @@ function Index() {
         </div>
       </header>
 
-      <main className="mx-auto -mt-4 max-w-4xl px-4 pb-12">
+      <main className="mx-auto -mt-4 w-full max-w-4xl flex-1 px-4 pb-12">
         <div className="grid gap-4 md:grid-cols-2 md:items-start">
           <WeatherCard />
           <BathingCard />

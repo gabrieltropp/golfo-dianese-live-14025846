@@ -13,6 +13,130 @@ import {
   fetchWaterAdvisories,
   STALE_AFTER_FAILURES,
 } from "@/lib/civic-data";
+import { fetchSegnalazioniInAttesa, type SegnalazioneAdmin } from "@/lib/segnalazioni";
+
+function ReportRow({ s, locale, onDone }: { s: SegnalazioneAdmin; locale: string; onDone: () => void }) {
+  const { t } = useI18n();
+  const [testo, setTesto] = useState(s.testo);
+  const [fonte, setFonte] = useState("");
+  const [nota, setNota] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function verify() {
+    if (!/^https?:\/\//i.test(fonte)) return toast.error(t("admin.sourceUrl"));
+    setBusy(true);
+    const { error } = await supabase
+      .from("segnalazioni")
+      .update({
+        testo,
+        stato: "verificata",
+        fonte_verifica_url: fonte,
+        note_moderazione: nota || null,
+        data_verifica: new Date().toISOString(),
+      })
+      .eq("id", s.id);
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success("OK");
+    onDone();
+  }
+
+  async function reject() {
+    setBusy(true);
+    const { error } = await supabase
+      .from("segnalazioni")
+      .update({ stato: "rifiutata", note_moderazione: nota || null, data_verifica: new Date().toISOString() })
+      .eq("id", s.id);
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success("OK");
+    onDone();
+  }
+
+  const input = "w-full rounded-xl border border-input bg-background px-3 py-2 text-sm";
+
+  return (
+    <li className="grid gap-2 rounded-2xl border border-border p-4">
+      <p className="text-sm font-bold">
+        {s.comune}
+        {s.categoria ? ` · ${t(`cat.${s.categoria}`)}` : ""} ·{" "}
+        <span className="font-normal text-muted-foreground">
+          {new Date(s.data_invio).toLocaleString(locale)}
+        </span>
+      </p>
+      <textarea value={testo} onChange={(e) => setTesto(e.target.value)} rows={3} className={input} />
+      {s.foto_url ? (
+        <img src={s.foto_url} alt="" className="max-h-56 w-full rounded-xl object-cover" />
+      ) : null}
+      {s.contatto ? (
+        <p className="text-xs text-muted-foreground">
+          {t("admin.contact")}: {s.contatto}
+        </p>
+      ) : null}
+      <input
+        placeholder={t("admin.sourceUrl")}
+        value={fonte}
+        onChange={(e) => setFonte(e.target.value)}
+        className={input}
+      />
+      <input
+        placeholder={t("admin.moderationNote")}
+        value={nota}
+        onChange={(e) => setNota(e.target.value)}
+        className={input}
+      />
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          disabled={busy}
+          onClick={verify}
+          className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60"
+        >
+          {t("admin.verify")}
+        </button>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={reject}
+          className="rounded-xl border border-destructive px-4 py-2 text-sm font-semibold text-destructive disabled:opacity-60"
+        >
+          {t("admin.reject")}
+        </button>
+      </div>
+    </li>
+  );
+}
+
+function ReportsQueue({ locale }: { locale: string }) {
+  const { t } = useI18n();
+  const qc = useQueryClient();
+  const { data } = useQuery({ queryKey: ["segnalazioni-attesa"], queryFn: fetchSegnalazioniInAttesa });
+  const rows = data ?? [];
+  const refresh = () => {
+    qc.invalidateQueries({ queryKey: ["segnalazioni-attesa"] });
+    qc.invalidateQueries({ queryKey: ["segnalazioni"] });
+  };
+
+  return (
+    <section className="rounded-3xl border border-border bg-card p-5">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <h2 className="text-xl font-bold">{t("admin.reports")}</h2>
+        <span className="rounded-full bg-primary px-3 py-1 text-sm font-bold text-primary-foreground">
+          {rows.length} {t("admin.pendingCount")}
+        </span>
+      </div>
+      {rows.length === 0 ? (
+        <p className="text-sm text-muted-foreground">{t("admin.noPending")}</p>
+      ) : (
+        <ul className="grid gap-3">
+          {rows.map((s) => (
+            <ReportRow key={s.id} s={s} locale={locale} onDone={refresh} />
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
 
 function UpdateStatusPanel({ locale }: { locale: string }) {
   const { t } = useI18n();
@@ -223,6 +347,7 @@ function Panel() {
   return (
     <div className="grid gap-5">
       <UpdateStatusPanel locale={lang} />
+      <ReportsQueue locale={lang} />
       <section className={card}>
         <h2 className="mb-3 text-xl font-bold">{t("card.bathing")}</h2>
         {(bathing.data ?? []).map((b) => (
