@@ -22,11 +22,11 @@ function AdvisoryItem({ a, tr }: { a: Avviso; tr: (s: string) => string }) {
     <li className="glass-soft rounded-2xl p-4">
       <div className="mb-2 flex flex-wrap items-center gap-2">
         <StatusBadge tone="yellow" label={t("water.kind.works")} />
-        {a.data_pubblicazione ? (
-          <span className="text-xs text-muted-foreground">
-            {t("water.published")}: {new Date(a.data_pubblicazione).toLocaleDateString(lang)}
-          </span>
-        ) : null}
+        <span className="text-xs text-muted-foreground">
+          {dataNonRilevata(a)
+            ? t("avviso.noDate")
+            : `${t("water.published")}: ${new Date(a.data_pubblicazione as string).toLocaleDateString(lang)}`}
+        </span>
       </div>
       <p className="text-base font-bold leading-tight">{tr(a.titolo)}</p>
       {a.data_intervento ? (
