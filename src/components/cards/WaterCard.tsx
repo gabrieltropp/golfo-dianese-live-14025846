@@ -3,6 +3,7 @@ import { Droplet, Wrench, CheckCircle2, ExternalLink, CalendarClock } from "luci
 import { StatusCard, StatusBadge, FreshnessNote } from "@/components/StatusCard";
 import { useI18n } from "@/lib/i18n";
 import {
+  dataNonRilevata,
   fetchAvvisi,
   fetchFontiStato,
   freshnessOf,
