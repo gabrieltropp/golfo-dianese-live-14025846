@@ -40,6 +40,7 @@ export type Database = {
           fetched_at: string
           fonte: string
           id: string
+          necessita_revisione: boolean
           testo_breve: string | null
           titolo: string
           updated_at: string
@@ -55,6 +56,7 @@ export type Database = {
           fetched_at?: string
           fonte: string
           id?: string
+          necessita_revisione?: boolean
           testo_breve?: string | null
           titolo: string
           updated_at?: string
@@ -70,6 +72,7 @@ export type Database = {
           fetched_at?: string
           fonte?: string
           id?: string
+          necessita_revisione?: boolean
           testo_breve?: string | null
           titolo?: string
           updated_at?: string

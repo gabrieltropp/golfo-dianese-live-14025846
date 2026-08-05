@@ -29,7 +29,7 @@ export async function fetchSegnalazioniVerificate(): Promise<Segnalazione[]> {
     .from("segnalazioni")
     .select(PUBLIC_COLUMNS)
     .eq("stato", "verificata")
-    .order("data_verifica", { ascending: false })
+    .order("data_verifica", { ascending: false, nullsFirst: false })
     .limit(100);
   if (error) throw error;
   return (data ?? []) as unknown as Segnalazione[];

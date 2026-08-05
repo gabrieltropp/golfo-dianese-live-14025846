@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Megaphone, ShieldCheck } from "lucide-react";
+import { StatusCard } from "@/components/StatusCard";
 import { useI18n } from "@/lib/i18n";
 import {
   SEGNALAZIONI_CATEGORIE,
@@ -11,7 +12,6 @@ import {
 export function SegnalaForm() {
   const { t } = useI18n();
   const qc = useQueryClient();
-  const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ tone: "ok" | "err"; text: string } | null>(null);
   const [count, setCount] = useState(0);
@@ -39,23 +39,19 @@ export function SegnalaForm() {
     "w-full rounded-xl border border-border bg-background/70 px-3 py-2 text-sm text-foreground";
 
   return (
-    <div className="glass-soft mt-4 rounded-2xl p-4">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        className="flex w-full items-center gap-2 text-left text-base font-bold"
-      >
-        <Megaphone className="size-5 shrink-0" aria-hidden="true" />
-        {t("report.title")}
-      </button>
-      <p className="mt-1 flex items-start gap-1.5 text-xs text-muted-foreground">
+    <StatusCard
+      title={t("report.title")}
+      eyebrow={t("bacheca.eyebrow")}
+      icon={<Megaphone />}
+      tone="green"
+      statusLabel={t("report.cta")}
+      summary={t("report.intro")}
+    >
+      <p className="mb-3 flex items-start gap-1.5 text-xs text-muted-foreground">
         <ShieldCheck className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
         {t("report.intro")}
       </p>
-
-      {open ? (
-        <form onSubmit={onSubmit} className="mt-3 grid gap-3">
+      <form onSubmit={onSubmit} className="grid gap-3">
           <input
             type="text"
             name="website"
@@ -131,8 +127,7 @@ export function SegnalaForm() {
               {msg.text}
             </p>
           ) : null}
-        </form>
-      ) : null}
-    </div>
+      </form>
+    </StatusCard>
   );
 }

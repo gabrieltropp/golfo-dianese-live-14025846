@@ -11,6 +11,8 @@ export type AvvisoRow = {
   fetched_at: string;
   comuni_citati?: string[];
   data_intervento?: string | null;
+  /** True when the publication date could not be determined with certainty. */
+  necessita_revisione?: boolean;
 };
 
 const UA =
@@ -47,21 +49,43 @@ const MESI: Record<string, number> = {
   luglio: 7, agosto: 8, settembre: 9, ottobre: 10, novembre: 11, dicembre: 12,
 };
 
-/** Parses Italian dates such as "29 Aprile 2026". Returns ISO date or null. */
+/** Reads the authoritative publication date from a WordPress/schema.org page. */
+export function extractPublishedTime(html: string): string | null {
+  const m =
+    html.match(/property=["']article:published_time["']\s+content=["']([^"']+)["']/i) ??
+    html.match(/content=["']([^"']+)["']\s+property=["']article:published_time["']/i) ??
+    html.match(/"datePublished"\s*:\s*"([^"]+)"/) ??
+    html.match(/<time[^>]*datetime=["']([^"']+)["']/i);
+  if (!m) return null;
+  const d = new Date(m[1]);
+  return Number.isNaN(d.getTime()) ? null : d.toISOString();
+}
+
+/** Parses Italian dates such as "29 Aprile 2026", "30 lug 2026", "09.07.26". Returns ISO or null. */
 export function parseItalianDate(raw: string): string | null {
   const text = clean(raw).toLowerCase();
-  const numeric = text.match(/(\d{1,2})[./](\d{1,2})[./](\d{2}|\d{4})/);
-  if (numeric) {
-    const year = numeric[3].length === 2 ? 2000 + Number(numeric[3]) : Number(numeric[3]);
-    const d = new Date(Date.UTC(year, Number(numeric[2]) - 1, Number(numeric[1])));
+  const iso = text.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) {
+    const d = new Date(Date.UTC(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3])));
     return Number.isNaN(d.getTime()) ? null : d.toISOString();
   }
-  const m = text.match(/(\d{1,2})\s+([a-zàèéìòù]+)\.?\s+(\d{2,4})/);
+  const numeric = text.match(/(\d{1,2})[./-](\d{1,2})[./-](\d{2}|\d{4})/);
+  if (numeric) {
+    const year = numeric[3].length === 2 ? 2000 + Number(numeric[3]) : Number(numeric[3]);
+    const day = Number(numeric[1]);
+    const month = Number(numeric[2]);
+    if (day < 1 || day > 31 || month < 1 || month > 12) return null;
+    const d = new Date(Date.UTC(year, month - 1, day));
+    return Number.isNaN(d.getTime()) ? null : d.toISOString();
+  }
+  const m = text.match(/(\d{1,2})\s*°?\s+([a-zàèéìòù]{3,})\.?\s+(\d{2,4})/);
   if (!m) return null;
   const monthKey = Object.keys(MESI).find((k) => k.startsWith(m[2].slice(0, 3)));
   if (!monthKey) return null;
   const year = m[3].length === 2 ? 2000 + Number(m[3]) : Number(m[3]);
-  const d = new Date(Date.UTC(year, MESI[monthKey] - 1, Number(m[1])));
+  const day = Number(m[1]);
+  if (day < 1 || day > 31) return null;
+  const d = new Date(Date.UTC(year, MESI[monthKey] - 1, day));
   return Number.isNaN(d.getTime()) ? null : d.toISOString();
 }
 
@@ -84,13 +108,15 @@ export async function scrapeDianoMarina(now: string): Promise<AvvisoRow[]> {
       const titolo = clean(link.text());
       if (!href || !titolo) return;
       const url = href.startsWith("http") ? href : base + href;
+      const data = parseItalianDate(card.find(".time-created-news-list").text());
       rows.push({
         fonte: "Comune di Diano Marina",
         comune: "Diano Marina",
         titolo,
         testo_breve: clean(card.find(".card-body > p").not(".time-created-news-list").not(".tag-categorie").first().text()) || null,
         url,
-        data_pubblicazione: parseItalianDate(card.find(".time-created-news-list").text()),
+        data_pubblicazione: data,
+        necessita_revisione: data === null,
         categoria: path.includes("avvisi") ? "Avviso" : "Notizia",
         fetched_at: now,
       });
@@ -122,13 +148,15 @@ export async function scrapeSanBartolomeo(now: string): Promise<AvvisoRow[]> {
     if (!href || !titolo || !href.includes("/novita/")) return;
     if (seen.has(href)) return;
     seen.add(href);
+    const data = parseItalianDate(card.find("span.data").first().text());
     rows.push({
       fonte: "Comune di San Bartolomeo al Mare",
       comune: "San Bartolomeo al Mare",
       titolo,
       testo_breve: clean(card.find("p.card-text").first().text()) || null,
       url: href,
-      data_pubblicazione: parseItalianDate(card.find("span.data").first().text()),
+      data_pubblicazione: data,
+      necessita_revisione: data === null,
       categoria: clean(card.find("a.category").first().text()) || "Notizia",
       fetched_at: now,
     });
@@ -154,13 +182,15 @@ export async function scrapeCervo(now: string): Promise<AvvisoRow[]> {
     if (seen.has(url)) return;
     seen.add(url);
     const card = a.closest(".card-body");
+    const data = parseItalianDate(card.find("span.data").first().text());
     rows.push({
       fonte: "Comune di Cervo",
       comune: "Cervo",
       titolo,
       testo_breve: clean(card.find("p.card-text").first().text()) || null,
       url,
-      data_pubblicazione: parseItalianDate(card.find("span.data").first().text()),
+      data_pubblicazione: data,
+      necessita_revisione: data === null,
       categoria: clean(card.find(".category-top span").first().text()) || "Notizia",
       fetched_at: now,
     });
@@ -236,8 +266,10 @@ export async function scrapeRivieracqua(now: string): Promise<AvvisoRow[]> {
   const rows: AvvisoRow[] = [];
   for (const item of items.slice(0, 15)) {
     let body = item.excerpt;
+    let published: string | null = null;
     try {
       const page = await getText(item.url);
+      published = extractPublishedTime(page);
       const $$ = cheerio.load(page);
       const content = $$(".entry-content").first();
       content.find(".blog-share, .social-icons, script, style, nav").remove();
@@ -247,13 +279,17 @@ export async function scrapeRivieracqua(now: string): Promise<AvvisoRow[]> {
     }
     const haystack = `${item.titolo} ${body}`;
     const comuni = extractComuniCitati(haystack);
+    // Authoritative order: the article's own published_time, then the date in the title.
+    // Never guess from the scrape time — an unknown date stays null.
+    const data = published ?? parseItalianDate(item.titolo);
     rows.push({
       fonte: "Rivieracqua",
       comune: comuni[0] ?? "Provincia di Imperia",
       titolo: item.titolo,
       testo_breve: (item.excerpt || body).slice(0, 400) || null,
       url: item.url,
-      data_pubblicazione: parseItalianDate(item.titolo),
+      data_pubblicazione: data,
+      necessita_revisione: data === null,
       categoria: "Servizio idrico",
       fetched_at: now,
       comuni_citati: comuni,
