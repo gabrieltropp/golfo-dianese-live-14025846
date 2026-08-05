@@ -108,13 +108,15 @@ export async function scrapeDianoMarina(now: string): Promise<AvvisoRow[]> {
       const titolo = clean(link.text());
       if (!href || !titolo) return;
       const url = href.startsWith("http") ? href : base + href;
+      const data = parseItalianDate(card.find(".time-created-news-list").text());
       rows.push({
         fonte: "Comune di Diano Marina",
         comune: "Diano Marina",
         titolo,
         testo_breve: clean(card.find(".card-body > p").not(".time-created-news-list").not(".tag-categorie").first().text()) || null,
         url,
-        data_pubblicazione: parseItalianDate(card.find(".time-created-news-list").text()),
+        data_pubblicazione: data,
+        necessita_revisione: data === null,
         categoria: path.includes("avvisi") ? "Avviso" : "Notizia",
         fetched_at: now,
       });
@@ -146,13 +148,15 @@ export async function scrapeSanBartolomeo(now: string): Promise<AvvisoRow[]> {
     if (!href || !titolo || !href.includes("/novita/")) return;
     if (seen.has(href)) return;
     seen.add(href);
+    const data = parseItalianDate(card.find("span.data").first().text());
     rows.push({
       fonte: "Comune di San Bartolomeo al Mare",
       comune: "San Bartolomeo al Mare",
       titolo,
       testo_breve: clean(card.find("p.card-text").first().text()) || null,
       url: href,
-      data_pubblicazione: parseItalianDate(card.find("span.data").first().text()),
+      data_pubblicazione: data,
+      necessita_revisione: data === null,
       categoria: clean(card.find("a.category").first().text()) || "Notizia",
       fetched_at: now,
     });
@@ -178,13 +182,15 @@ export async function scrapeCervo(now: string): Promise<AvvisoRow[]> {
     if (seen.has(url)) return;
     seen.add(url);
     const card = a.closest(".card-body");
+    const data = parseItalianDate(card.find("span.data").first().text());
     rows.push({
       fonte: "Comune di Cervo",
       comune: "Cervo",
       titolo,
       testo_breve: clean(card.find("p.card-text").first().text()) || null,
       url,
-      data_pubblicazione: parseItalianDate(card.find("span.data").first().text()),
+      data_pubblicazione: data,
+      necessita_revisione: data === null,
       categoria: clean(card.find(".category-top span").first().text()) || "Notizia",
       fetched_at: now,
     });
@@ -260,8 +266,10 @@ export async function scrapeRivieracqua(now: string): Promise<AvvisoRow[]> {
   const rows: AvvisoRow[] = [];
   for (const item of items.slice(0, 15)) {
     let body = item.excerpt;
+    let published: string | null = null;
     try {
       const page = await getText(item.url);
+      published = extractPublishedTime(page);
       const $$ = cheerio.load(page);
       const content = $$(".entry-content").first();
       content.find(".blog-share, .social-icons, script, style, nav").remove();
@@ -271,13 +279,17 @@ export async function scrapeRivieracqua(now: string): Promise<AvvisoRow[]> {
     }
     const haystack = `${item.titolo} ${body}`;
     const comuni = extractComuniCitati(haystack);
+    // Authoritative order: the article's own published_time, then the date in the title.
+    // Never guess from the scrape time — an unknown date stays null.
+    const data = published ?? parseItalianDate(item.titolo);
     rows.push({
       fonte: "Rivieracqua",
       comune: comuni[0] ?? "Provincia di Imperia",
       titolo: item.titolo,
       testo_breve: (item.excerpt || body).slice(0, 400) || null,
       url: item.url,
-      data_pubblicazione: parseItalianDate(item.titolo),
+      data_pubblicazione: data,
+      necessita_revisione: data === null,
       categoria: "Servizio idrico",
       fetched_at: now,
       comuni_citati: comuni,
