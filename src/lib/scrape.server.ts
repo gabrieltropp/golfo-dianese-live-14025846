@@ -11,6 +11,8 @@ export type AvvisoRow = {
   fetched_at: string;
   comuni_citati?: string[];
   data_intervento?: string | null;
+  /** True when the publication date could not be determined with certainty. */
+  necessita_revisione?: boolean;
 };
 
 const UA =
@@ -47,21 +49,43 @@ const MESI: Record<string, number> = {
   luglio: 7, agosto: 8, settembre: 9, ottobre: 10, novembre: 11, dicembre: 12,
 };
 
-/** Parses Italian dates such as "29 Aprile 2026". Returns ISO date or null. */
+/** Reads the authoritative publication date from a WordPress/schema.org page. */
+export function extractPublishedTime(html: string): string | null {
+  const m =
+    html.match(/property=["']article:published_time["']\s+content=["']([^"']+)["']/i) ??
+    html.match(/content=["']([^"']+)["']\s+property=["']article:published_time["']/i) ??
+    html.match(/"datePublished"\s*:\s*"([^"]+)"/) ??
+    html.match(/<time[^>]*datetime=["']([^"']+)["']/i);
+  if (!m) return null;
+  const d = new Date(m[1]);
+  return Number.isNaN(d.getTime()) ? null : d.toISOString();
+}
+
+/** Parses Italian dates such as "29 Aprile 2026", "30 lug 2026", "09.07.26". Returns ISO or null. */
 export function parseItalianDate(raw: string): string | null {
   const text = clean(raw).toLowerCase();
-  const numeric = text.match(/(\d{1,2})[./](\d{1,2})[./](\d{2}|\d{4})/);
-  if (numeric) {
-    const year = numeric[3].length === 2 ? 2000 + Number(numeric[3]) : Number(numeric[3]);
-    const d = new Date(Date.UTC(year, Number(numeric[2]) - 1, Number(numeric[1])));
+  const iso = text.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) {
+    const d = new Date(Date.UTC(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3])));
     return Number.isNaN(d.getTime()) ? null : d.toISOString();
   }
-  const m = text.match(/(\d{1,2})\s+([a-zàèéìòù]+)\.?\s+(\d{2,4})/);
+  const numeric = text.match(/(\d{1,2})[./-](\d{1,2})[./-](\d{2}|\d{4})/);
+  if (numeric) {
+    const year = numeric[3].length === 2 ? 2000 + Number(numeric[3]) : Number(numeric[3]);
+    const day = Number(numeric[1]);
+    const month = Number(numeric[2]);
+    if (day < 1 || day > 31 || month < 1 || month > 12) return null;
+    const d = new Date(Date.UTC(year, month - 1, day));
+    return Number.isNaN(d.getTime()) ? null : d.toISOString();
+  }
+  const m = text.match(/(\d{1,2})\s*°?\s+([a-zàèéìòù]{3,})\.?\s+(\d{2,4})/);
   if (!m) return null;
   const monthKey = Object.keys(MESI).find((k) => k.startsWith(m[2].slice(0, 3)));
   if (!monthKey) return null;
   const year = m[3].length === 2 ? 2000 + Number(m[3]) : Number(m[3]);
-  const d = new Date(Date.UTC(year, MESI[monthKey] - 1, Number(m[1])));
+  const day = Number(m[1]);
+  if (day < 1 || day > 31) return null;
+  const d = new Date(Date.UTC(year, MESI[monthKey] - 1, day));
   return Number.isNaN(d.getTime()) ? null : d.toISOString();
 }
 
