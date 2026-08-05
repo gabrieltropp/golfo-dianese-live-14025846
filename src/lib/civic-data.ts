@@ -131,6 +131,8 @@ export type Avviso = {
   fetched_at: string;
   comuni_citati: string[] | null;
   data_intervento: string | null;
+  /** Set by the scraper when the publication date could not be parsed reliably. */
+  necessita_revisione?: boolean | null;
 };
 
 /** Source label written by the Rivieracqua scraper. Routing is by source, never by keywords. */
@@ -144,39 +146,52 @@ export function golfoComuniOf(a: Avviso): string[] {
   return GOLFO_COMUNI.filter((c) => cited.includes(c));
 }
 
-/** Rivieracqua notices that mention at least one town of the gulf. */
-export function rivieracquaAvvisi(avvisi: Avviso[]): Avviso[] {
-  const now = Date.now();
-  return avvisi
-    .filter(
-      (a) =>
-        a.fonte === FONTE_RIVIERACQUA &&
-        golfoComuniOf(a).length > 0 &&
-        now - new Date(a.data_pubblicazione ?? a.fetched_at).getTime() <= AVVISO_MAX_AGE_MS,
-    )
-    .sort(
-      (a, b) =>
-        new Date(b.data_pubblicazione ?? b.fetched_at).getTime() -
-        new Date(a.data_pubblicazione ?? a.fetched_at).getTime(),
-    );
-}
-
 /** Notices older than one month are not shown (and are purged server-side). */
 export const AVVISO_MAX_AGE_MS = 31 * 24 * 60 * 60 * 1000;
 
-function avvisoDate(a: Avviso): number {
-  return new Date(a.data_pubblicazione ?? a.fetched_at).getTime();
+/** Real publication time, or null when the date is unknown. Never guessed. */
+export function avvisoDate(a: Avviso): number | null {
+  if (!a.data_pubblicazione) return null;
+  const t = new Date(a.data_pubblicazione).getTime();
+  return Number.isNaN(t) ? null : t;
+}
+
+export function dataNonRilevata(a: Avviso): boolean {
+  return avvisoDate(a) === null;
+}
+
+/**
+ * Chronological order, newest first. Notices without a reliable date are never
+ * mixed into the ranking: they always sink to the bottom.
+ */
+export function byDataDesc(a: Avviso, b: Avviso): number {
+  const da = avvisoDate(a);
+  const db = avvisoDate(b);
+  if (da === null && db === null) return a.titolo.localeCompare(b.titolo);
+  if (da === null) return 1;
+  if (db === null) return -1;
+  return db - da;
 }
 
 export function isRecente(a: Avviso, now = Date.now()): boolean {
-  return now - avvisoDate(a) <= AVVISO_MAX_AGE_MS;
+  const d = avvisoDate(a);
+  // Undated notices use the fetch time only for retention, never for ordering.
+  const ref = d ?? new Date(a.fetched_at).getTime();
+  return now - ref <= AVVISO_MAX_AGE_MS;
+}
+
+/** Rivieracqua notices that mention at least one town of the gulf. */
+export function rivieracquaAvvisi(avvisi: Avviso[]): Avviso[] {
+  return avvisi
+    .filter((a) => a.fonte === FONTE_RIVIERACQUA && golfoComuniOf(a).length > 0 && isRecente(a))
+    .sort(byDataDesc);
 }
 
 /** Town-council notices only: Rivieracqua never appears in the Comuni section. */
 export function comuneAvvisi(avvisi: Avviso[], comune: string): Avviso[] {
   return avvisi
     .filter((a) => a.fonte !== FONTE_RIVIERACQUA && a.comune === comune && isRecente(a))
-    .sort((a, b) => avvisoDate(b) - avvisoDate(a));
+    .sort(byDataDesc);
 }
 
 export async function fetchAvvisi() {
