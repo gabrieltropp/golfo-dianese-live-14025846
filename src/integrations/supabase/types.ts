@@ -201,6 +201,7 @@ export type Database = {
       }
       fonti_stato: {
         Row: {
+          anomalia: string | null
           created_at: string
           error: string | null
           fail_streak: number
@@ -212,6 +213,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          anomalia?: string | null
           created_at?: string
           error?: string | null
           fail_streak?: number
@@ -223,6 +225,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          anomalia?: string | null
           created_at?: string
           error?: string | null
           fail_streak?: number
@@ -309,6 +312,36 @@ export type Database = {
           note_moderazione?: string | null
           stato?: string
           testo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      traduzioni: {
+        Row: {
+          campo: string
+          contenuto_id: string
+          created_at: string
+          hash_sorgente: string
+          lingua: string
+          testo_tradotto: string
+          updated_at: string
+        }
+        Insert: {
+          campo: string
+          contenuto_id: string
+          created_at?: string
+          hash_sorgente: string
+          lingua: string
+          testo_tradotto: string
+          updated_at?: string
+        }
+        Update: {
+          campo?: string
+          contenuto_id?: string
+          created_at?: string
+          hash_sorgente?: string
+          lingua?: string
+          testo_tradotto?: string
           updated_at?: string
         }
         Relationships: []
