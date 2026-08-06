@@ -233,18 +233,41 @@ function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const { siteKey, token, containerRef, reset } = useTurnstile();
+  const verify = useServerFn(verifyTurnstile);
+  const ready = siteKey === null || Boolean(token);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (siteKey && !token) return toast.error("Completa la verifica di sicurezza");
     setBusy(true);
+    if (siteKey && token) {
+      const check = await verify({ data: { token } });
+      if (!check.ok) {
+        setBusy(false);
+        reset();
+        return toast.error("Verifica di sicurezza non superata");
+      }
+    }
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
-    if (error) toast.error(error.message);
+    if (error) {
+      reset();
+      toast.error(error.message);
+    }
   }
 
   return (
     <form onSubmit={submit} className="mx-auto grid w-full max-w-sm gap-3 rounded-3xl border border-border bg-card p-6">
       <h1 className="text-2xl font-bold">{t("admin.title")}</h1>
+      <div ref={containerRef} className="min-h-[1px]" />
+      {siteKey === null ? (
+        <p className="text-xs text-muted-foreground">
+          Verifica captcha non configurata (chiavi Turnstile mancanti).
+        </p>
+      ) : null}
+      {ready ? (
+        <>
       <label className="grid gap-1 text-sm font-semibold">
         {t("admin.email")}
         <input
@@ -272,6 +295,12 @@ function LoginForm() {
       >
         {t("admin.login")}
       </button>
+        </>
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          Supera la verifica di sicurezza per accedere al modulo di login.
+        </p>
+      )}
       <Link to="/" className="text-center text-sm underline">
         {t("admin.back")}
       </Link>
