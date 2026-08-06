@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import type { Session } from "@supabase/supabase-js";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
@@ -14,6 +15,8 @@ import {
   STALE_AFTER_FAILURES,
 } from "@/lib/civic-data";
 import { fetchSegnalazioniInAttesa, type SegnalazioneAdmin } from "@/lib/segnalazioni";
+import { useTurnstile } from "@/lib/use-turnstile";
+import { verifyTurnstile } from "@/lib/turnstile.functions";
 
 function ReportRow({ s, locale, onDone }: { s: SegnalazioneAdmin; locale: string; onDone: () => void }) {
   const { t } = useI18n();
