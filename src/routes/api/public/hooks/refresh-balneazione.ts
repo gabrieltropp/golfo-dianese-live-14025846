@@ -9,6 +9,26 @@ async function run() {
 
   try {
     const results = await scrapeBalneazione(anno, now);
+
+    // Coherence check: a sampling date older than the one already stored for the
+    // same point is an anomaly (stale upstream payload) — keep the newer date and
+    // surface it in the admin "Stato aggiornamenti" panel.
+    const { data: previous } = await supabaseAdmin
+      .from("balneazione_stato")
+      .select("codice_acqua, data_ultimo_controllo");
+    const prevDates = new Map(
+      (previous ?? []).map((r) => [r.codice_acqua, r.data_ultimo_controllo as string | null]),
+    );
+    const anomalie: string[] = [];
+    for (const r of results) {
+      const old = prevDates.get(r.stato.codice_acqua) ?? null;
+      const next = r.stato.data_ultimo_controllo;
+      if (old && next && next < old) {
+        anomalie.push(`${r.punto.nome_punto}: ${next} < ${old}`);
+        r.stato.data_ultimo_controllo = old;
+      }
+    }
+
     const { error: pErr } = await supabaseAdmin
       .from("punti_balneazione")
       .upsert(
@@ -33,10 +53,14 @@ async function run() {
         last_success_at: now,
         fetched_at: now,
         fail_streak: 0,
+        anomalia:
+          anomalie.length > 0
+            ? `Date di campionamento più vecchie del dato salvato: ${anomalie.join("; ")}`.slice(0, 500)
+            : null,
       },
       { onConflict: "fonte" },
     );
-    return Response.json({ ok: true, at: now, anno, points: results.length });
+    return Response.json({ ok: true, at: now, anno, points: results.length, anomalie });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     console.error("[refresh-balneazione]", message);
