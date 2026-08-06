@@ -3,8 +3,15 @@ import { ExternalLink, MessageSquareHeart, Users } from "lucide-react";
 import { StatusCard } from "@/components/StatusCard";
 import { useI18n } from "@/lib/i18n";
 import { fetchSegnalazioniVerificate, type Segnalazione } from "@/lib/segnalazioni";
+import { useContentTranslate } from "@/lib/use-auto-translate";
 
-function BachecaItem({ s }: { s: Segnalazione }) {
+function BachecaItem({
+  s,
+  tr,
+}: {
+  s: Segnalazione;
+  tr: (id: string, campo: string, fallback: string) => string;
+}) {
   const { t, lang } = useI18n();
   const when = s.data_verifica ?? s.data_invio;
 
@@ -20,7 +27,7 @@ function BachecaItem({ s }: { s: Segnalazione }) {
           <span className="text-xs text-muted-foreground">· {t(`cat.${s.categoria}`)}</span>
         ) : null}
       </div>
-      <p className="text-sm leading-relaxed">{s.testo}</p>
+      <p className="text-sm leading-relaxed">{tr(s.id, "testo", s.testo)}</p>
       {s.foto_url ? (
         <img
           src={s.foto_url}
@@ -57,6 +64,7 @@ export function BachecaCard() {
       new Date(b.data_verifica ?? b.data_invio).getTime() -
       new Date(a.data_verifica ?? a.data_invio).getTime(),
   );
+  const tr = useContentTranslate(items.map((s) => ({ id: s.id, campo: "testo", testo: s.testo })));
 
   return (
     <StatusCard
@@ -82,7 +90,7 @@ export function BachecaCard() {
       ) : (
         <ul className="grid gap-3">
           {items.map((s) => (
-            <BachecaItem key={s.id} s={s} />
+            <BachecaItem key={s.id} s={s} tr={tr} />
           ))}
         </ul>
       )}
