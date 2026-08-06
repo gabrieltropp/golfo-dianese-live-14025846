@@ -11,11 +11,17 @@ import {
   rivieracquaAvvisi,
   type Avviso,
 } from "@/lib/civic-data";
-import { useAutoTranslate } from "@/lib/use-auto-translate";
+import { useContentTranslate } from "@/lib/use-auto-translate";
 
 const RIVIERACQUA_URL = "https://rivieracqua.it/category/avvisi/";
 
-function AdvisoryItem({ a, tr }: { a: Avviso; tr: (s: string) => string }) {
+function AdvisoryItem({
+  a,
+  tr,
+}: {
+  a: Avviso;
+  tr: (id: string, campo: string, fallback: string) => string;
+}) {
   const { t, lang } = useI18n();
   const golfo = golfoComuniOf(a);
 
@@ -29,14 +35,16 @@ function AdvisoryItem({ a, tr }: { a: Avviso; tr: (s: string) => string }) {
             : `${t("water.published")}: ${new Date(a.data_pubblicazione as string).toLocaleDateString(lang)}`}
         </span>
       </div>
-      <p className="text-base font-bold leading-tight">{tr(a.titolo)}</p>
+      <p className="text-base font-bold leading-tight">{tr(a.id, "titolo", a.titolo)}</p>
       {a.data_intervento ? (
         <p className="mt-1 flex items-center gap-1.5 text-sm font-semibold">
           <CalendarClock className="size-4 shrink-0" aria-hidden="true" />
-          {t("water.intervention")}: {tr(a.data_intervento)}
+          {t("water.intervention")}: {tr(a.id, "data_intervento", a.data_intervento)}
         </p>
       ) : null}
-      {a.testo_breve ? <p className="mt-1 text-sm">{tr(a.testo_breve)}</p> : null}
+      {a.testo_breve ? (
+        <p className="mt-1 text-sm">{tr(a.id, "testo_breve", a.testo_breve)}</p>
+      ) : null}
       {golfo.length > 0 ? (
         <p className="mt-2 text-sm">
           {t("water.involved")}:{" "}
@@ -74,8 +82,12 @@ export function WaterCard() {
   });
 
   const active = rivieracquaAvvisi(data ?? []);
-  const tr = useAutoTranslate(
-    active.flatMap((a) => [a.titolo, a.testo_breve ?? "", a.data_intervento ?? ""]).filter(Boolean),
+  const tr = useContentTranslate(
+    active.flatMap((a) => [
+      { id: a.id, campo: "titolo", testo: a.titolo },
+      { id: a.id, campo: "testo_breve", testo: a.testo_breve ?? "" },
+      { id: a.id, campo: "data_intervento", testo: a.data_intervento ?? "" },
+    ]),
   );
 
   const stato = (fonti ?? []).find((f) => f.fonte === "Rivieracqua");
