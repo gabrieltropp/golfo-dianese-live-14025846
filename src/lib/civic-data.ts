@@ -259,6 +259,8 @@ export type FonteStato = {
   last_success_at: string | null;
   fetched_at: string;
   fail_streak?: number;
+  /** Coherence warning raised by a refresh job (shown in the admin panel). */
+  anomalia?: string | null;
 };
 
 /** A source is considered stale after 3 consecutive failed runs. */

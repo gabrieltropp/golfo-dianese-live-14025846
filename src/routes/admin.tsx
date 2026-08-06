@@ -194,6 +194,10 @@ function UpdateStatusPanel({ locale }: { locale: string }) {
                     {streak}
                   </td>
                 </tr>
+                );
+            })}
+          </tbody>
+        </table>
               );
             })}
           </tbody>
