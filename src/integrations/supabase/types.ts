@@ -360,7 +360,42 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      segnalazioni_pubbliche: {
+        Row: {
+          categoria: string | null
+          comune: string | null
+          data_invio: string | null
+          data_verifica: string | null
+          fonte_verifica_url: string | null
+          foto_url: string | null
+          id: string | null
+          stato: string | null
+          testo: string | null
+        }
+        Insert: {
+          categoria?: string | null
+          comune?: string | null
+          data_invio?: string | null
+          data_verifica?: string | null
+          fonte_verifica_url?: string | null
+          foto_url?: string | null
+          id?: string | null
+          stato?: string | null
+          testo?: string | null
+        }
+        Update: {
+          categoria?: string | null
+          comune?: string | null
+          data_invio?: string | null
+          data_verifica?: string | null
+          fonte_verifica_url?: string | null
+          foto_url?: string | null
+          id?: string | null
+          stato?: string | null
+          testo?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       is_admin: { Args: { _user_id: string }; Returns: boolean }

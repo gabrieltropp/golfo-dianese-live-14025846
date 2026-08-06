@@ -26,9 +26,8 @@ const PUBLIC_COLUMNS =
 /** Public read: only verified reports, never the reporter's contact. */
 export async function fetchSegnalazioniVerificate(): Promise<Segnalazione[]> {
   const { data, error } = await supabase
-    .from("segnalazioni")
+    .from("segnalazioni_pubbliche")
     .select(PUBLIC_COLUMNS)
-    .eq("stato", "verificata")
     .order("data_verifica", { ascending: false, nullsFirst: false })
     .limit(100);
   if (error) throw error;
