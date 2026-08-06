@@ -222,22 +222,13 @@ function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    const { error } =
-      mode === "signin"
-        ? await supabase.auth.signInWithPassword({ email, password })
-        : await supabase.auth.signUp({
-            email,
-            password,
-            options: { emailRedirectTo: `${window.location.origin}/admin` },
-          });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
     if (error) toast.error(error.message);
-    else if (mode === "signup") toast.success("Account creato. Chiedi l'abilitazione admin.");
   }
 
   return (
@@ -268,14 +259,7 @@ function LoginForm() {
         disabled={busy}
         className="rounded-xl bg-primary px-4 py-2 font-semibold text-primary-foreground disabled:opacity-60"
       >
-        {mode === "signin" ? t("admin.login") : "Crea account"}
-      </button>
-      <button
-        type="button"
-        onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-        className="text-sm underline"
-      >
-        {mode === "signin" ? "Crea un nuovo account" : "Ho già un account"}
+        {t("admin.login")}
       </button>
       <Link to="/" className="text-center text-sm underline">
         {t("admin.back")}
