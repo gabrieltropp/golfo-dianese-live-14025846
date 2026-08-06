@@ -13,13 +13,18 @@ import {
   freshnessOf,
   type Avviso,
 } from "@/lib/civic-data";
-import { useAutoTranslate } from "@/lib/use-auto-translate";
+import { useContentTranslate } from "@/lib/use-auto-translate";
 
 function ComuneRow({ name, avvisi }: { name: string; avvisi: Avviso[] }) {
   const { t, lang } = useI18n();
   const [open, setOpen] = useState(false);
-  const tr = useAutoTranslate(
-    open ? avvisi.flatMap((a) => [a.titolo, a.testo_breve ?? ""]).filter(Boolean) : [],
+  const tr = useContentTranslate(
+    open
+      ? avvisi.flatMap((a) => [
+          { id: a.id, campo: "titolo", testo: a.titolo },
+          { id: a.id, campo: "testo_breve", testo: a.testo_breve ?? "" },
+        ])
+      : [],
   );
   const total = avvisi.length;
 
@@ -48,14 +53,16 @@ function ComuneRow({ name, avvisi }: { name: string; avvisi: Avviso[] }) {
             <ul className="grid gap-2">
               {avvisi.map((a) => (
                 <li key={a.id} className="rounded-xl bg-sand/5 p-3">
-                  <p className="text-sm font-bold">{tr(a.titolo)}</p>
+                  <p className="text-sm font-bold">{tr(a.id, "titolo", a.titolo)}</p>
                   <p className="text-xs text-muted-foreground">
                     {a.fonte}
                     {dataNonRilevata(a)
                       ? ` · ${t("avviso.noDate")}`
                       : ` · ${new Date(a.data_pubblicazione as string).toLocaleDateString(lang)}`}
                   </p>
-                  {a.testo_breve ? <p className="mt-1 text-sm">{tr(a.testo_breve)}</p> : null}
+                  {a.testo_breve ? (
+                    <p className="mt-1 text-sm">{tr(a.id, "testo_breve", a.testo_breve)}</p>
+                  ) : null}
                   <a
                     href={a.url}
                     target="_blank"

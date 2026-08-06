@@ -1,6 +1,18 @@
 import { createServerFn } from "@tanstack/react-start";
+import { translateContentItems, type ContentItem } from "@/lib/translations.server";
 
 type Input = { texts: string[]; lang: string };
+type ContentInput = { items: ContentItem[]; lang: string };
+
+/**
+ * Translates dynamic records (avvisi, segnalazioni) with a hash-checked cache,
+ * so a translation is regenerated as soon as its Italian source changes.
+ */
+export const translateContent = createServerFn({ method: "POST" })
+  .inputValidator((data: ContentInput) => data)
+  .handler(async ({ data }) => ({
+    map: await translateContentItems(data.items ?? [], data.lang),
+  }));
 
 const LANG_NAMES: Record<string, string> = {
   it: "Italian",

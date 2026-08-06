@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import type { Session } from "@supabase/supabase-js";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
@@ -14,6 +15,8 @@ import {
   STALE_AFTER_FAILURES,
 } from "@/lib/civic-data";
 import { fetchSegnalazioniInAttesa, type SegnalazioneAdmin } from "@/lib/segnalazioni";
+import { useTurnstile } from "@/lib/use-turnstile";
+import { verifyTurnstile } from "@/lib/turnstile.functions";
 
 function ReportRow({ s, locale, onDone }: { s: SegnalazioneAdmin; locale: string; onDone: () => void }) {
   const { t } = useI18n();
@@ -158,7 +161,8 @@ function UpdateStatusPanel({ locale }: { locale: string }) {
               <th className="py-2 pr-3">{t("admin.state")}</th>
               <th className="py-2 pr-3">{t("admin.lastOk")}</th>
               <th className="py-2 pr-3">{t("admin.lastTry")}</th>
-              <th className="py-2">{t("admin.errors")}</th>
+              <th className="py-2 pr-3">{t("admin.errors")}</th>
+              <th className="py-2">Anomalie</th>
             </tr>
           </thead>
           <tbody>
@@ -188,10 +192,20 @@ function UpdateStatusPanel({ locale }: { locale: string }) {
                   <td className="py-2 pr-3">{new Date(f.fetched_at).toLocaleString(locale)}</td>
                   <td
                     className={
-                      "py-2 font-bold " + (streak >= STALE_AFTER_FAILURES ? "text-status-red" : "")
+                      "py-2 pr-3 font-bold " +
+                      (streak >= STALE_AFTER_FAILURES ? "text-status-red" : "")
                     }
                   >
                     {streak}
+                  </td>
+                  <td className="py-2">
+                    {f.anomalia ? (
+                      <span className="block max-w-[18rem] rounded-lg bg-status-red/15 px-2 py-1 text-xs font-semibold text-status-red">
+                        {f.anomalia}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
                   </td>
                 </tr>
               );
@@ -222,18 +236,41 @@ function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const { siteKey, token, containerRef, reset } = useTurnstile();
+  const verify = useServerFn(verifyTurnstile);
+  const ready = siteKey === null || Boolean(token);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (siteKey && !token) return toast.error("Completa la verifica di sicurezza");
     setBusy(true);
+    if (siteKey && token) {
+      const check = await verify({ data: { token } });
+      if (!check.ok) {
+        setBusy(false);
+        reset();
+        return toast.error("Verifica di sicurezza non superata");
+      }
+    }
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
-    if (error) toast.error(error.message);
+    if (error) {
+      reset();
+      toast.error(error.message);
+    }
   }
 
   return (
     <form onSubmit={submit} className="mx-auto grid w-full max-w-sm gap-3 rounded-3xl border border-border bg-card p-6">
       <h1 className="text-2xl font-bold">{t("admin.title")}</h1>
+      <div ref={containerRef} className="min-h-[1px]" />
+      {siteKey === null ? (
+        <p className="text-xs text-muted-foreground">
+          Verifica captcha non configurata (chiavi Turnstile mancanti).
+        </p>
+      ) : null}
+      {ready ? (
+        <>
       <label className="grid gap-1 text-sm font-semibold">
         {t("admin.email")}
         <input
@@ -261,6 +298,12 @@ function LoginForm() {
       >
         {t("admin.login")}
       </button>
+        </>
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          Supera la verifica di sicurezza per accedere al modulo di login.
+        </p>
+      )}
       <Link to="/" className="text-center text-sm underline">
         {t("admin.back")}
       </Link>

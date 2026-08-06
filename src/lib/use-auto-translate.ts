@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { translateTexts } from "@/lib/translate.functions";
+import { translateTexts, translateContent } from "@/lib/translate.functions";
 import { useI18n } from "@/lib/i18n";
 
 /**
@@ -27,4 +27,29 @@ export function useAutoTranslate(texts: string[]): (source: string) => string {
   });
 
   return (source: string) => (lang === "it" ? source : (data?.[source] ?? source));
+}
+
+export type TranslatableItem = { id: string; campo: string; testo: string };
+
+/**
+ * Translation for dynamic records (avvisi, segnalazioni), cached server-side and
+ * keyed by a hash of the Italian source: when the source text changes the
+ * translation is regenerated, so it never drifts out of sync with the content.
+ */
+export function useContentTranslate(
+  items: TranslatableItem[],
+): (id: string, campo: string, fallback: string) => string {
+  const { lang } = useI18n();
+  const run = useServerFn(translateContent);
+  const payload = items.filter((i) => i.testo && i.testo.trim().length > 0);
+
+  const { data } = useQuery({
+    queryKey: ["content-translate", lang, payload.map((i) => `${i.id}:${i.campo}:${i.testo}`)],
+    enabled: lang !== "it" && payload.length > 0,
+    staleTime: 30 * 60 * 1000,
+    queryFn: async () => (await run({ data: { items: payload, lang } })).map,
+  });
+
+  return (id, campo, fallback) =>
+    lang === "it" ? fallback : (data?.[`${id}::${campo}`] ?? fallback);
 }
