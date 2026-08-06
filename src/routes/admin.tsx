@@ -158,7 +158,8 @@ function UpdateStatusPanel({ locale }: { locale: string }) {
               <th className="py-2 pr-3">{t("admin.state")}</th>
               <th className="py-2 pr-3">{t("admin.lastOk")}</th>
               <th className="py-2 pr-3">{t("admin.lastTry")}</th>
-              <th className="py-2">{t("admin.errors")}</th>
+              <th className="py-2 pr-3">{t("admin.errors")}</th>
+              <th className="py-2">Anomalie</th>
             </tr>
           </thead>
           <tbody>
@@ -188,16 +189,22 @@ function UpdateStatusPanel({ locale }: { locale: string }) {
                   <td className="py-2 pr-3">{new Date(f.fetched_at).toLocaleString(locale)}</td>
                   <td
                     className={
-                      "py-2 font-bold " + (streak >= STALE_AFTER_FAILURES ? "text-status-red" : "")
+                      "py-2 pr-3 font-bold " +
+                      (streak >= STALE_AFTER_FAILURES ? "text-status-red" : "")
                     }
                   >
                     {streak}
                   </td>
+                  <td className="py-2">
+                    {f.anomalia ? (
+                      <span className="block max-w-[18rem] rounded-lg bg-status-red/15 px-2 py-1 text-xs font-semibold text-status-red">
+                        {f.anomalia}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
+                  </td>
                 </tr>
-                );
-            })}
-          </tbody>
-        </table>
               );
             })}
           </tbody>
