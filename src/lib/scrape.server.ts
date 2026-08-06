@@ -354,6 +354,26 @@ function mapStato(raw: string | null): "compliant" | "non_compliant" | "unknown"
   return "unknown";
 }
 
+type ArpalAnalisi = { DATACAMPIONAMENTO?: string | null; DATA_CAMPIONAMENTO?: string | null };
+
+/** Most recent sampling date (YYYY-MM-DD) for a bathing point, or null. */
+export async function latestSamplingDate(anno: number, codice: string): Promise<string | null> {
+  try {
+    const rows = await getJson<ArpalAnalisi[]>(
+      `${ARPAL_API}/BalneazioneDatiAnalitici?ANNO=${anno}&CODICE_ACQUA=${encodeURIComponent(codice)}`,
+    );
+    const dates = (rows ?? [])
+      .map((r) => r.DATACAMPIONAMENTO ?? r.DATA_CAMPIONAMENTO ?? null)
+      .filter((d): d is string => typeof d === "string" && d.length >= 10)
+      .map((d) => d.slice(0, 10))
+      .filter((d) => !Number.isNaN(new Date(d).getTime()))
+      .sort();
+    return dates.length > 0 ? dates[dates.length - 1] : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function scrapeBalneazione(anno: number, now: string): Promise<BalneazioneScrape[]> {
   const out: BalneazioneScrape[] = [];
   for (const { arpal, comune, ordine } of ARPAL_COMUNI) {
@@ -363,7 +383,10 @@ export async function scrapeBalneazione(anno: number, now: string): Promise<Baln
     const sorted = [...points].sort((a, b) =>
       a.DESCRIZIONE_ACQUA.localeCompare(b.DESCRIZIONE_ACQUA, "it"),
     );
-    sorted.forEach((p, i) => {
+    for (const [i, p] of sorted.entries()) {
+      // The sampling date must come from the analysis table, taking the MOST RECENT
+      // sampling of the season — never the first row, which is often the oldest.
+      const sampled = await latestSamplingDate(anno, p.CODICE_ACQUA);
       out.push({
         punto: {
           codice_acqua: p.CODICE_ACQUA,
@@ -378,12 +401,12 @@ export async function scrapeBalneazione(anno: number, now: string): Promise<Baln
           classificazione: clean(p.CLASSIFICAZIONE) || null,
           motivo: clean(p.STATO_MOTIVO).replace(/^-$/, "") || null,
           anno,
-          data_ultimo_controllo: p.STATO_DATA ? p.STATO_DATA.slice(0, 10) : null,
+          data_ultimo_controllo: sampled ?? (p.STATO_DATA ? p.STATO_DATA.slice(0, 10) : null),
           source_url: `https://www.arpal.liguria.it/tematiche/mare/balneabilita.html?ANNO=${anno}&CODICE_ACQUA=${p.CODICE_ACQUA}&PROVINCIA=Imperia&COMUNE=${encodeURIComponent(arpal)}`,
           fetched_at: now,
         },
       });
-    });
+    }
   }
   if (out.length === 0) throw new Error("ARPAL: nessun punto di monitoraggio restituito");
   return out;
