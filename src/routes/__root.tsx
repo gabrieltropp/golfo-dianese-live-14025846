@@ -87,7 +87,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content:
           "Allerta meteo, balneabilità, acqua potabile e mobilità nel Golfo Dianese in tempo reale.",
       },
-      { name: "theme-color", content: "#0b2b4a" },
+      { name: "theme-color", content: "#22bdee" },
       { property: "og:title", content: "Golfo Dianese Live · Servizi in tempo reale a Diano Marina" },
       {
         property: "og:description",
