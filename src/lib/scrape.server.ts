@@ -31,7 +31,17 @@ async function getText(url: string): Promise<string> {
 }
 
 async function getJson<T>(url: string): Promise<T> {
-  const res = await fetch(url, { headers: { "User-Agent": UA, Accept: "application/json" } });
+  // Always hit the origin: no CDN/runtime cache may serve a stale ARPAL payload.
+  const bust = `${url.includes("?") ? "&" : "?"}_ts=${Date.now()}`;
+  const res = await fetch(url + bust, {
+    cache: "no-store",
+    headers: {
+      "User-Agent": UA,
+      Accept: "application/json",
+      "Cache-Control": "no-cache, no-store, max-age=0",
+      Pragma: "no-cache",
+    },
+  });
   if (!res.ok) throw new Error(`${url} -> HTTP ${res.status}`);
   return (await res.json()) as T;
 }
