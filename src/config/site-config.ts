@@ -77,9 +77,9 @@ export const siteConfig = {
    * 1) COLORI — lascia "" per usare il valore predefinito
    * ------------------------------------------------------- */
   colori: {
-    sfondo: "#217dd9",
+    sfondo: "",
     testo: "",
-    primario: "#217dd9",
+    primario: "",
     primarioTesto: "",
     accento: "",
     scheda: "",
