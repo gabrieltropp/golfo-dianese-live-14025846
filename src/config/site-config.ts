@@ -85,7 +85,7 @@ export const siteConfig = {
     scheda: "#217dd9",
     schedaTesto: "",
     testoSecondario: "",
-    bordo: "",
+    bordo: "#217dd9",
     statoOk: "",
     statoAttenzione: "",
     statoAllerta: "",
