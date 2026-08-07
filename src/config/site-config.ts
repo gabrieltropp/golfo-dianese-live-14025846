@@ -105,7 +105,7 @@ export const siteConfig = {
    * 1) COLORI DI GRUPPO — un valore cambia più elementi
    * ------------------------------------------------------- */
   temi: {
-    bluNotte: "",
+    bluNotte: "#217dd9",
     sabbiaChiara: "",
     accentoCaldo: "",
     accentoFreddo: "",
