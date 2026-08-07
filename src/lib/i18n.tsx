@@ -1,4 +1,4 @@
-import { siteConfig } from "@/config/site-config";
+import { textOverridesFor } from "@/config/site-config";
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
 export const LANGUAGES = ["it", "en", "fr", "de"] as const;
@@ -395,10 +395,10 @@ const de: Dict = {
 
 /** I testi del documento di configurazione sovrascrivono le traduzioni predefinite. */
 const DICTS: Record<Lang, Dict> = {
-  it: { ...it, ...(siteConfig.testi.it ?? {}) },
-  en: { ...en, ...(siteConfig.testi.en ?? {}) },
-  fr: { ...fr, ...(siteConfig.testi.fr ?? {}) },
-  de: { ...de, ...(siteConfig.testi.de ?? {}) },
+  it: { ...it, ...textOverridesFor("it") },
+  en: { ...en, ...textOverridesFor("en") },
+  fr: { ...fr, ...textOverridesFor("fr") },
+  de: { ...de, ...textOverridesFor("de") },
 };
 
 export const LANGUAGE_LABELS: Record<Lang, string> = { it: "IT", en: "EN", fr: "FR", de: "DE" };
