@@ -392,7 +392,15 @@ const de: Dict = {
   "mobility.bike": "Radweg",
 };
 
-const DICTS: Record<Lang, Dict> = { it, en, fr, de };
+import { siteConfig } from "@/config/site-config";
+
+/** I testi del documento di configurazione sovrascrivono le traduzioni predefinite. */
+const DICTS: Record<Lang, Dict> = {
+  it: { ...it, ...(siteConfig.testi.it ?? {}) },
+  en: { ...en, ...(siteConfig.testi.en ?? {}) },
+  fr: { ...fr, ...(siteConfig.testi.fr ?? {}) },
+  de: { ...de, ...(siteConfig.testi.de ?? {}) },
+};
 
 export const LANGUAGE_LABELS: Record<Lang, string> = { it: "IT", en: "EN", fr: "FR", de: "DE" };
 
