@@ -11,6 +11,7 @@ import { BachecaCard } from "@/components/cards/BachecaCard";
 import { SegnalaForm } from "@/components/SegnalaForm";
 import { useI18n } from "@/lib/i18n";
 import { ARPAL_URL } from "@/lib/civic-data";
+import { siteConfig } from "@/config/site-config";
 import bgVideo from "@/assets/sunrisediano.mp4.asset.json";
 
 const DESC =
@@ -59,8 +60,8 @@ function Index() {
             <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
               <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-sand/15 sm:size-12">
                 <img
-                  src="/icons/icon-512.png"
-                  alt="Golfo Dianese Live"
+                  src={siteConfig.loghi.header}
+                  alt={siteConfig.loghi.headerAlt}
                   className="size-full object-cover"
                   width={48}
                   height={48}
