@@ -1,3 +1,4 @@
+import { siteConfig } from "@/config/site-config";
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
 export const LANGUAGES = ["it", "en", "fr", "de"] as const;
@@ -391,8 +392,6 @@ const de: Dict = {
   "mobility.traffic": "Straßenverkehr",
   "mobility.bike": "Radweg",
 };
-
-import { siteConfig } from "@/config/site-config";
 
 /** I testi del documento di configurazione sovrascrivono le traduzioni predefinite. */
 const DICTS: Record<Lang, Dict> = {
