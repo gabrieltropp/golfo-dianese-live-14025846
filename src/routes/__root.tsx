@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { I18nProvider } from "../lib/i18n";
+import { siteColorCss } from "../config/site-config";
 
 function NotFoundComponent() {
   return (
@@ -123,10 +124,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: ReactNode }) {
+  const colorCss = siteColorCss();
   return (
     <html lang="en">
       <head>
         <HeadContent />
+        {colorCss ? <style dangerouslySetInnerHTML={{ __html: colorCss }} /> : null}
       </head>
       <body>
         {children}

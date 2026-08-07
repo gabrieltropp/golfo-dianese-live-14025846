@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import type { Session } from "@supabase/supabase-js";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
@@ -15,8 +14,8 @@ import {
   STALE_AFTER_FAILURES,
 } from "@/lib/civic-data";
 import { fetchSegnalazioniInAttesa, type SegnalazioneAdmin } from "@/lib/segnalazioni";
-import { useTurnstile } from "@/lib/use-turnstile";
-import { verifyTurnstile } from "@/lib/turnstile.functions";
+import { MathHumanCheck } from "@/components/MathHumanCheck";
+import { siteConfig } from "@/config/site-config";
 
 function ReportRow({ s, locale, onDone }: { s: SegnalazioneAdmin; locale: string; onDone: () => void }) {
   const { t } = useI18n();
@@ -236,40 +235,36 @@ function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
-  const { siteKey, token, containerRef, reset } = useTurnstile();
-  const verify = useServerFn(verifyTurnstile);
-  const ready = siteKey === null || Boolean(token);
+  const [solved, setSolved] = useState(false);
+  const [resetKey, setResetKey] = useState(0);
+  const handleSolved = useCallback((v: boolean) => setSolved(v), []);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (siteKey && !token) return toast.error("Completa la verifica di sicurezza");
+    if (!solved) return toast.error(t("admin.humanFail"));
     setBusy(true);
-    if (siteKey && token) {
-      const check = await verify({ data: { token } });
-      if (!check.ok) {
-        setBusy(false);
-        reset();
-        return toast.error("Verifica di sicurezza non superata");
-      }
-    }
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
     if (error) {
-      reset();
+      setResetKey((k) => k + 1);
       toast.error(error.message);
     }
   }
 
   return (
     <form onSubmit={submit} className="mx-auto grid w-full max-w-sm gap-3 rounded-3xl border border-border bg-card p-6">
-      <h1 className="text-2xl font-bold">{t("admin.title")}</h1>
-      <div ref={containerRef} className="min-h-[1px]" />
-      {siteKey === null ? (
-        <p className="text-xs text-muted-foreground">
-          Verifica captcha non configurata (chiavi Turnstile mancanti).
-        </p>
+      {siteConfig.loghi.login ? (
+        <img
+          src={siteConfig.loghi.login}
+          alt={siteConfig.loghi.headerAlt}
+          className="mx-auto size-14 rounded-2xl object-cover"
+          width={56}
+          height={56}
+        />
       ) : null}
-      {ready ? (
+      <h1 className="text-2xl font-bold">{t("admin.title")}</h1>
+      <MathHumanCheck label={t("admin.human")} onSolved={handleSolved} resetKey={resetKey} />
+      {solved ? (
         <>
       <label className="grid gap-1 text-sm font-semibold">
         {t("admin.email")}
@@ -301,7 +296,7 @@ function LoginForm() {
         </>
       ) : (
         <p className="text-sm text-muted-foreground">
-          Supera la verifica di sicurezza per accedere al modulo di login.
+          {t("admin.humanHint")}
         </p>
       )}
       <Link to="/" className="text-center text-sm underline">

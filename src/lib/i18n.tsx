@@ -1,3 +1,4 @@
+import { siteConfig } from "@/config/site-config";
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
 export const LANGUAGES = ["it", "en", "fr", "de"] as const;
@@ -66,6 +67,9 @@ const it: Dict = {
   "footer.sources": "Fonti ufficiali",
   "admin.title": "Pannello amministratore",
   "admin.login": "Accedi",
+  "admin.human": "Verifica umana: quanto fa la somma?",
+  "admin.humanHint": "Risolvi la somma per sbloccare il modulo di accesso.",
+  "admin.humanFail": "Risposta errata: riprova con la somma.",
   "admin.logout": "Esci",
   "admin.email": "Email",
   "admin.password": "Password",
@@ -215,6 +219,9 @@ const en: Dict = {
   "footer.sources": "Official sources",
   "admin.title": "Admin panel",
   "admin.login": "Sign in",
+  "admin.human": "Human check: what is the sum?",
+  "admin.humanHint": "Solve the sum to unlock the login form.",
+  "admin.humanFail": "Wrong answer: try the sum again.",
   "admin.logout": "Sign out",
   "admin.email": "Email",
   "admin.password": "Password",
@@ -386,7 +393,13 @@ const de: Dict = {
   "mobility.bike": "Radweg",
 };
 
-const DICTS: Record<Lang, Dict> = { it, en, fr, de };
+/** I testi del documento di configurazione sovrascrivono le traduzioni predefinite. */
+const DICTS: Record<Lang, Dict> = {
+  it: { ...it, ...(siteConfig.testi.it ?? {}) },
+  en: { ...en, ...(siteConfig.testi.en ?? {}) },
+  fr: { ...fr, ...(siteConfig.testi.fr ?? {}) },
+  de: { ...de, ...(siteConfig.testi.de ?? {}) },
+};
 
 export const LANGUAGE_LABELS: Record<Lang, string> = { it: "IT", en: "EN", fr: "FR", de: "DE" };
 
