@@ -81,6 +81,10 @@ export type SiteColors = {
   vetroSfondo: string;
   /** Bordo dei pannelli in vetro */
   vetroBordo: string;
+  /** Sfondo dell'intestazione (header in alto) */
+  intestazioneSfondo: string;
+  /** Colore del testo dell'intestazione (titolo, sottotitolo, lingue) */
+  intestazioneTesto: string;
 };
 
 export type SiteLogos = {
@@ -135,6 +139,8 @@ export const siteConfig = {
     corallo: "",
     vetroSfondo: "",
     vetroBordo: "",
+    intestazioneSfondo: "",
+    intestazioneTesto: "",
   } satisfies SiteColors,
 
   /* ---------------------------------------------------------
@@ -289,8 +295,14 @@ export const siteConfig = {
 
 /** Mappa gruppo di colore -> variabili CSS del tema. Non modificare. */
 export const THEME_GROUP_VAR_MAP: Record<keyof SiteThemeGroups, string[]> = {
-  bluNotte: ["--background", "--card", "--popover", "--sea-deep", "--glass-bg"],
-  sabbiaChiara: ["--foreground", "--card-foreground", "--popover-foreground", "--sand"],
+  bluNotte: ["--background", "--card", "--popover", "--sea-deep", "--glass-bg", "--header-bg"],
+  sabbiaChiara: [
+    "--foreground",
+    "--card-foreground",
+    "--popover-foreground",
+    "--sand",
+    "--header-fg",
+  ],
   accentoCaldo: ["--primary", "--ring", "--coral"],
   accentoFreddo: ["--accent"],
   dettagliTenui: ["--muted-foreground", "--border", "--input"],
@@ -317,6 +329,8 @@ export const COLOR_VAR_MAP: Record<keyof SiteColors, string[]> = {
   corallo: ["--coral"],
   vetroSfondo: ["--glass-bg"],
   vetroBordo: ["--glass-border"],
+  intestazioneSfondo: ["--header-bg"],
+  intestazioneTesto: ["--header-fg"],
 };
 
 /** CSS generato dai gruppi + dai colori avanzati (che hanno la precedenza). */

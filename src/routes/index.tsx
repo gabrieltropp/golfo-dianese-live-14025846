@@ -9,6 +9,7 @@ import { WebcamCard } from "@/components/cards/WebcamCard";
 import { ComuniCard } from "@/components/cards/ComuniCard";
 import { BachecaCard } from "@/components/cards/BachecaCard";
 import { SegnalaForm } from "@/components/SegnalaForm";
+import { Reveal } from "@/components/Reveal";
 import { useI18n } from "@/lib/i18n";
 import { ARPAL_URL } from "@/lib/civic-data";
 import { siteConfig } from "@/config/site-config";
@@ -51,14 +52,17 @@ function Index() {
         <div className="absolute inset-0 bg-sea-deep/0" />
       </div>
       <div className="relative z-10 flex min-h-screen flex-col">
-      <header className="px-5 pb-8 pt-6" style={{ backgroundImage: "var(--gradient-sea)" }}>
+      <header
+        className="px-5 pb-8 pt-6 text-header-fg"
+        style={{ backgroundImage: "var(--gradient-sea)" }}
+      >
         <div className="mx-auto flex max-w-4xl flex-col gap-4">
           <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
             <div className="flex w-full justify-end sm:hidden">
               <LanguageSwitcher />
             </div>
             <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
-              <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-sand/15 sm:size-12">
+              <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-header-fg/15 sm:size-12">
                 <img
                   src={siteConfig.loghi.header}
                   alt={siteConfig.loghi.headerAlt}
@@ -68,10 +72,10 @@ function Index() {
                 />
               </span>
               <div className="min-w-0">
-                <h1 className="font-display whitespace-nowrap text-[clamp(1.45rem,6.8vw,2.9rem)] font-extrabold leading-tight text-sand">
+                <h1 className="font-display whitespace-nowrap text-[clamp(1.45rem,6.8vw,2.9rem)] font-extrabold leading-tight text-header-fg">
                   {t("app.title")}
                 </h1>
-                <p className="truncate text-sm text-sand/85">{t("app.subtitle")}</p>
+                <p className="truncate text-sm text-header-fg/85">{t("app.subtitle")}</p>
               </div>
             </div>
             <div className="hidden sm:block">
@@ -83,16 +87,30 @@ function Index() {
 
       <main className="mx-auto -mt-4 w-full max-w-4xl flex-1 px-4 pb-12">
         <div className="grid gap-4 md:grid-cols-2 md:items-start">
-          <WeatherCard />
-          <BathingCard />
-          <WebcamCard />
-          <WaterCard />
-          <MobilityCard />
-          <ComuniCard />
-          <BachecaCard />
-          <div className="md:col-span-2">
+          <Reveal index={0}>
+            <WeatherCard />
+          </Reveal>
+          <Reveal index={1}>
+            <BathingCard />
+          </Reveal>
+          <Reveal index={2}>
+            <WebcamCard />
+          </Reveal>
+          <Reveal index={3}>
+            <WaterCard />
+          </Reveal>
+          <Reveal index={4}>
+            <MobilityCard />
+          </Reveal>
+          <Reveal index={5}>
+            <ComuniCard />
+          </Reveal>
+          <Reveal index={6}>
+            <BachecaCard />
+          </Reveal>
+          <Reveal index={7} className="md:col-span-2">
             <SegnalaForm />
-          </div>
+          </Reveal>
         </div>
       </main>
 
