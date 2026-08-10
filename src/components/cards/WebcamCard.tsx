@@ -27,7 +27,7 @@ const WEBCAMS: Webcam[] = [
   {
     nome: "Golfo",
     tipo: "embed",
-    thumb: "https://www.windy.com/b92170ef-7292-4a37-9c79-c845d347956d",
+    src: "https://www.windy.com/b92170ef-7292-4a37-9c79-c845d347956d",
     pagina: "https://hoteljasmin.com/webcam/",
   },
 ];
