@@ -85,33 +85,27 @@ function Index() {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-4xl flex-1 px-4 pb-16 pt-16 md:pt-24">
-        <div className="grid gap-8 md:grid-cols-2 md:items-start">
-          <Reveal index={0}>
-            <WeatherCard />
-          </Reveal>
-          <Reveal index={1}>
-            <BathingCard />
-          </Reveal>
-          <Reveal index={2}>
-            <WebcamCard />
-          </Reveal>
-          <Reveal index={3}>
-            <WaterCard />
-          </Reveal>
-          <Reveal index={4}>
-            <MobilityCard />
-          </Reveal>
-          <Reveal index={5}>
-            <ComuniCard />
-          </Reveal>
-          <Reveal index={6}>
-            <BachecaCard />
-          </Reveal>
-          <Reveal index={7} className="md:col-span-2">
-            <SegnalaForm />
-          </Reveal>
-        </div>
+      <main className="mx-auto w-full max-w-3xl flex-1 px-4">
+        {[
+          <WeatherCard key="w" />,
+          <BathingCard key="b" />,
+          <WebcamCard key="c" />,
+          <WaterCard key="a" />,
+          <MobilityCard key="m" />,
+          <ComuniCard key="co" />,
+          <BachecaCard key="ba" />,
+          <SegnalaForm key="s" />,
+        ].map((card, i) => (
+          <section
+            key={i}
+            className="flex w-full items-center justify-center py-10"
+            style={{ minHeight: "100dvh" }}
+          >
+            <Reveal index={i} className="w-full">
+              {card}
+            </Reveal>
+          </section>
+        ))}
       </main>
 
       <footer className="glass mt-8 border-x-0 border-b-0 px-5 py-4">
