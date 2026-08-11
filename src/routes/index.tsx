@@ -85,8 +85,8 @@ function Index() {
         </div>
       </header>
 
-      <main className="mx-auto -mt-4 w-full max-w-4xl flex-1 px-4 pb-12">
-        <div className="grid gap-4 md:grid-cols-2 md:items-start">
+      <main className="mx-auto w-full max-w-4xl flex-1 px-4 pb-16 pt-16 md:pt-24">
+        <div className="grid gap-8 md:grid-cols-2 md:items-start">
           <Reveal index={0}>
             <WeatherCard />
           </Reveal>
@@ -114,11 +114,11 @@ function Index() {
         </div>
       </main>
 
-      <footer className="glass mt-4 border-x-0 border-b-0 px-5 py-8">
+      <footer className="glass mt-8 border-x-0 border-b-0 px-5 py-4">
         <div className="mx-auto max-w-4xl text-sm text-muted-foreground">
-          <p className="mb-3">{t("footer.disclaimer")}</p>
-          <p className="mb-2 font-semibold text-foreground">{t("footer.sources")}</p>
-          <ul className="mb-4 grid gap-1">
+          <p className="mb-2 text-xs">{t("footer.disclaimer")}</p>
+          <p className="mb-1 font-semibold text-foreground">{t("footer.sources")}</p>
+          <ul className="mb-2 flex flex-wrap gap-x-4 gap-y-1">
             <li>
               <a className="underline" href="https://allertaliguria.regione.liguria.it/" target="_blank" rel="noreferrer noopener">
                 Allerta Liguria · Protezione Civile
