@@ -1,3 +1,4 @@
+import { useState, useCallback } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Lock } from "lucide-react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
@@ -32,6 +33,10 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const { t } = useI18n();
+  const [done, setDone] = useState<Record<number, boolean>>({});
+  const markDone = useCallback((i: number) => {
+    setDone((d) => (d[i] ? d : { ...d, [i]: true }));
+  }, []);
 
   return (
     <div className="relative min-h-screen w-full max-w-full overflow-x-hidden bg-background">
@@ -98,10 +103,16 @@ function Index() {
         ].map((card, i) => (
           <section
             key={i}
-            className="flex w-full items-center justify-center py-10"
-            style={{ minHeight: i === 0 ? "calc(100dvh - 10rem)" : "100dvh" }}
+            className="flex w-full items-center justify-center py-4 transition-[min-height,padding] duration-500 ease-out"
+            style={{
+              minHeight: done[i]
+                ? "0px"
+                : i === 0
+                  ? "calc(100dvh - 10rem)"
+                  : "100dvh",
+            }}
           >
-            <Reveal index={i} className="w-full">
+            <Reveal index={i} className="w-full" onDone={() => markDone(i)}>
               {card}
             </Reveal>
           </section>
