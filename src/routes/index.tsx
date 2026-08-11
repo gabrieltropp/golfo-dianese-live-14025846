@@ -99,7 +99,7 @@ function Index() {
           <section
             key={i}
             className="flex w-full items-center justify-center py-10"
-            style={{ minHeight: "100dvh" }}
+            style={{ minHeight: i === 0 ? "calc(100dvh - 10rem)" : "100dvh" }}
           >
             <Reveal index={i} className="w-full">
               {card}
