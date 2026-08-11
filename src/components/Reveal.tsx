@@ -9,10 +9,12 @@ import { cn } from "@/lib/utils";
 export function Reveal({
   index = 0,
   className,
+  onDone,
   children,
 }: {
   index?: number;
   className?: string;
+  onDone?: () => void;
   children: ReactNode;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -29,6 +31,7 @@ export function Reveal({
     if (reduce) {
       setProgress(1);
       setDone(true);
+      onDone?.();
       return;
     }
 
@@ -49,6 +52,7 @@ export function Reveal({
       if (p >= 1 && !finished) {
         finished = true;
         setDone(true);
+        onDone?.();
         window.removeEventListener("scroll", onScroll);
         window.removeEventListener("resize", onScroll);
       }
@@ -66,6 +70,7 @@ export function Reveal({
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const rot = index % 2 === 0 ? 9 : -10;
