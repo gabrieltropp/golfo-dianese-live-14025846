@@ -41,8 +41,10 @@ export function Reveal({
       const vh = window.innerHeight || 1;
       // 0 quando il bordo alto della card entra dal fondo,
       // 1 dopo circa una schermata intera di scroll.
+      // completa quando il centro della card raggiunge il centro dello schermo
+      const total = Math.max(1, vh / 2 + rect.height / 2);
       const travelled = vh - rect.top;
-      const p = Math.min(1, Math.max(0, travelled / (vh * 0.92)));
+      const p = Math.min(1, Math.max(0, travelled / total));
       setProgress(p);
       if (p >= 1 && !finished) {
         finished = true;
