@@ -105,11 +105,7 @@ function Index() {
             key={i}
             className="flex w-full items-center justify-center py-4 transition-[min-height,padding] duration-500 ease-out"
             style={{
-              minHeight: done[i]
-                ? "0px"
-                : i === 0
-                  ? "calc(100dvh - 10rem)"
-                  : "100dvh",
+             paddingBottom: '70vh',
             }}
           >
             <Reveal index={i} className="w-full" onDone={() => markDone(i)}>
