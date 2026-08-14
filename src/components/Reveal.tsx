@@ -3,29 +3,21 @@ import { cn } from "@/lib/utils";
 
 /**
  * Card che entra in scena "fluttuante e obliqua" e si raddrizza in modo
- * legato allo scroll. Per rendere il movimento più fluido e meno "sensibile"
- * ai piccoli scroll:
- *  - c'è una zona morta iniziale prima che l'animazione inizi
- *  - serve più distanza di scroll per completare il reveal
- *  - il progress è smussato con un lerp per evitare scatti.
+ * legato allo scroll (serve ~una schermata intera per completare).
  * Anima solo transform/opacity e, una volta dritta, non torna mai obliqua.
  */
 export function Reveal({
   index = 0,
   className,
-  onDone,
   children,
 }: {
   index?: number;
   className?: string;
-  onDone?: () => void;
   children: ReactNode;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [progress, setProgress] = useState(0);
   const [done, setDone] = useState(false);
-  const smoothRef = useRef(0);
-  const targetRef = useRef(0);
 
   useEffect(() => {
     const el = ref.current;
@@ -37,62 +29,34 @@ export function Reveal({
     if (reduce) {
       setProgress(1);
       setDone(true);
-      onDone?.();
       return;
     }
 
     let raf = 0;
     let finished = false;
-    const DEAD_ZONE = 0.22; // % di viewport che la card deve entrare prima che inizi l'animazione
-    const SCROLL_SPAN = 1.35; // fattore di distanza extra richiesto per completare (1 = una viewport)
-    const LERP = 0.075; // fattore di smorzamento (più basso = più lento/fluido)
 
     const compute = () => {
       raf = 0;
       const rect = el.getBoundingClientRect();
       const vh = window.innerHeight || 1;
-
-      const start = vh * DEAD_ZONE;
-      const total = Math.max(vh * 0.5, vh * SCROLL_SPAN);
+      // 0 quando il bordo alto della card entra dal fondo,
+      // 1 dopo circa una schermata intera di scroll.
       const travelled = vh - rect.top;
-
-      let p = 0;
-      if (travelled > start) {
-        p = Math.min(1, Math.max(0, (travelled - start) / (total - start)));
-      }
-
-      targetRef.current = p;
-
+      const p = Math.min(1, Math.max(0, travelled / (vh * 0.92)));
+      setProgress(p);
       if (p >= 1 && !finished) {
         finished = true;
-        smoothRef.current = 1;
-        setProgress(1);
         setDone(true);
-        onDone?.();
         window.removeEventListener("scroll", onScroll);
         window.removeEventListener("resize", onScroll);
       }
     };
 
-    const smoothLoop = () => {
-      const prev = smoothRef.current;
-      const next = prev + (targetRef.current - prev) * LERP;
-      if (Math.abs(next - prev) > 0.0005 || targetRef.current >= 1) {
-        smoothRef.current = next;
-        setProgress(next);
-        raf = requestAnimationFrame(smoothLoop);
-      } else {
-        raf = 0;
-      }
-    };
-
     const onScroll = () => {
-      compute();
-      if (!raf) raf = requestAnimationFrame(smoothLoop);
+      if (!raf) raf = requestAnimationFrame(compute);
     };
 
     compute();
-    raf = requestAnimationFrame(smoothLoop);
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
     return () => {
@@ -100,7 +64,6 @@ export function Reveal({
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const rot = index % 2 === 0 ? 9 : -10;

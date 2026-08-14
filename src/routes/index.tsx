@@ -1,4 +1,3 @@
-import { useState, useCallback } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Lock } from "lucide-react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
@@ -33,14 +32,9 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const { t } = useI18n();
-  const [done, setDone] = useState<Record<number, boolean>>({});
-  const markDone = useCallback((i: number) => {
-    setDone((d) => (d[i] ? d : { ...d, [i]: true }));
-  }, []);
 
   return (
-    // 1. Made this the scroll container with snap controls
-    <div className="relative h-screen w-full max-w-full overflow-x-hidden overflow-y-auto bg-background scroll-snap-y mandatory scroll-smooth">
+    <div className="relative min-h-screen w-full max-w-full overflow-x-hidden bg-background">
       <div
         className="pointer-events-none fixed inset-0 z-0 w-full overflow-hidden bg-sea-deep"
         aria-hidden="true"
@@ -57,96 +51,95 @@ function Index() {
         />
         <div className="absolute inset-0 bg-sea-deep/0" />
       </div>
-      
       <div className="relative z-10 flex min-h-screen flex-col">
-        {/* Header will scroll away normally */}
-        <header
-          className="px-5 pb-8 pt-6 text-header-fg"
-          style={{ backgroundImage: "var(--gradient-sea)" }}
-        >
-          <div className="mx-auto flex max-w-4xl flex-col gap-4">
-            <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-              <div className="flex w-full justify-end sm:hidden">
-                <LanguageSwitcher />
-              </div>
-              <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
-                <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-header-fg/15 sm:size-12">
-                  <img
-                    src={siteConfig.loghi.header}
-                    alt={siteConfig.loghi.headerAlt}
-                    className="size-full object-cover"
-                    width={48}
-                    height={48}
-                  />
-                </span>
-                <div className="min-w-0">
-                  <h1 className="font-display whitespace-nowrap text-[clamp(1.45rem,6.8vw,2.9rem)] font-extrabold leading-tight text-header-fg">
-                    {t("app.title")}
-                  </h1>
-                  <p className="truncate text-sm text-header-fg/85">{t("app.subtitle")}</p>
-                </div>
-              </div>
-              <div className="hidden sm:block">
-                <LanguageSwitcher />
+      <header
+        className="px-5 pb-8 pt-6 text-header-fg"
+        style={{ backgroundImage: "var(--gradient-sea)" }}
+      >
+        <div className="mx-auto flex max-w-4xl flex-col gap-4">
+          <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+            <div className="flex w-full justify-end sm:hidden">
+              <LanguageSwitcher />
+            </div>
+            <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
+              <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-header-fg/15 sm:size-12">
+                <img
+                  src={siteConfig.loghi.header}
+                  alt={siteConfig.loghi.headerAlt}
+                  className="size-full object-cover"
+                  width={48}
+                  height={48}
+                />
+              </span>
+              <div className="min-w-0">
+                <h1 className="font-display whitespace-nowrap text-[clamp(1.45rem,6.8vw,2.9rem)] font-extrabold leading-tight text-header-fg">
+                  {t("app.title")}
+                </h1>
+                <p className="truncate text-sm text-header-fg/85">{t("app.subtitle")}</p>
               </div>
             </div>
+            <div className="hidden sm:block">
+              <LanguageSwitcher />
+            </div>
           </div>
-        </header>
+        </div>
+      </header>
 
-        <main className="mx-auto w-full max-w-3xl flex-1 px-4">
-          {[
-            <WeatherCard key="w" />,
-            <BathingCard key="b" />,
-            <WebcamCard key="c" />,
-            <WaterCard key="a" />,
-            <MobilityCard key="m" />,
-            <ComuniCard key="co" />,
-            <BachecaCard key="ba" />,
-            <SegnalaForm key="s" />,
-          ].map((card, i) => (
-            // 2. Transformed each section into a full-height snapping window
-            <section
-              key={i}
-              className="flex w-full items-center justify-center py-4 transition-[min-height] duration-500 ease-out scroll-snap-align-start"
-              style={{
-                // Account for header layout space on the very first slide
-                minHeight: i === 0 ? "calc(100dvh - 10rem)" : "100dvh",
-              }}
-            >
-              <Reveal index={i} className="w-full" onDone={() => markDone(i)}>
-                {card}
-              </Reveal>
-            </section>
-          ))}
-        </main>
+      <main className="mx-auto w-full max-w-4xl flex-1 px-4 pb-16 pt-16 md:pt-24">
+        <div className="grid gap-8 md:grid-cols-2 md:items-start">
+          <Reveal index={0}>
+            <WeatherCard />
+          </Reveal>
+          <Reveal index={1}>
+            <BathingCard />
+          </Reveal>
+          <Reveal index={2}>
+            <WebcamCard />
+          </Reveal>
+          <Reveal index={3}>
+            <WaterCard />
+          </Reveal>
+          <Reveal index={4}>
+            <MobilityCard />
+          </Reveal>
+          <Reveal index={5}>
+            <ComuniCard />
+          </Reveal>
+          <Reveal index={6}>
+            <BachecaCard />
+          </Reveal>
+          <Reveal index={7} className="md:col-span-2">
+            <SegnalaForm />
+          </Reveal>
+        </div>
+      </main>
 
-        {/* 3. Added snap alignment to the footer so it locks neatly at the end */}
-        <footer className="glass mt-8 border-x-0 border-b-0 px-5 py-4 scroll-snap-align-end">
-          <div className="mx-auto max-w-4xl text-sm text-muted-foreground">
-            <p className="mb-2 text-xs">{t("footer.disclaimer")}</p>
-            <p className="mb-1 font-semibold text-foreground">{t("footer.sources")}</p>
-            <ul className="mb-2 flex flex-wrap gap-x-4 gap-y-1">
-              <li>
-                <a className="underline" href="https://regione.liguria.it" target="_blank" rel="noreferrer noopener">
-                  Allerta Liguria · Protezione Civile
-                </a>
-              </li>
-              <li>
-                <a className="underline" href={ARPAL_URL} target="_blank" rel="noreferrer noopener">
-                  ARPAL · Balneabilità
-                </a>
-              </li>
-              <li>
-                <a className="underline" href="https://rivieracqua.it" target="_blank" rel="noreferrer noopener">
-                  Rivieracqua · Servizio idrico
-                </a>
-              </li>
-            </ul>
-            <Link to="/admin" className="inline-flex items-center gap-2 underline">
-              <Lock className="size-4" /> {t("app.admin")}
-            </Link>
-          </div>
-        </footer>
+      <footer className="glass mt-8 border-x-0 border-b-0 px-5 py-4">
+        <div className="mx-auto max-w-4xl text-sm text-muted-foreground">
+          <p className="mb-2 text-xs">{t("footer.disclaimer")}</p>
+          <p className="mb-1 font-semibold text-foreground">{t("footer.sources")}</p>
+          <ul className="mb-2 flex flex-wrap gap-x-4 gap-y-1">
+            <li>
+              <a className="underline" href="https://allertaliguria.regione.liguria.it/" target="_blank" rel="noreferrer noopener">
+                Allerta Liguria · Protezione Civile
+              </a>
+            </li>
+            <li>
+              <a className="underline" href={ARPAL_URL} target="_blank" rel="noreferrer noopener">
+                ARPAL · Balneabilità
+              </a>
+            </li>
+            <li>
+              <a className="underline" href="https://www.rivieracqua.it/" target="_blank" rel="noreferrer noopener">
+                Rivieracqua · Servizio idrico
+              </a>
+            </li>
+          </ul>
+          <Link to="/admin" className="inline-flex items-center gap-2 underline">
+            <Lock className="size-4" /> {t("app.admin")}
+          </Link>
+        </div>
+      </footer>
       </div>
     </div>
   );

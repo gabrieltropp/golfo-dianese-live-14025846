@@ -21,10 +21,15 @@ const WEBCAMS: Webcam[] = [
   {
     nome: "San Bartolomeo al Mare",
     tipo: "embed",
-    src: "https://g0.ipcamlive.com/player/player.php?alias=hotelgabriella&skin=white&autoplay=1&disablezoombutton=1&disableframecapture=1&disabletimelapseplayer=1&disabledownloadbutton=1&disableplaybackspeedbutton=1",
-    pagina: "https://www.hotelgabriella.it/webcam-meteo-diano-marina",
+    src: "https://www.windy.com/57bbb963-bbc2-4065-a150-9e4e7609c0d7",
+    pagina: "https://www.twitch.tv/hoteldellerose2021",
   },
-  
+  {
+    nome: "Golfo",
+    tipo: "embed",
+    src: "https://www.windy.com/b92170ef-7292-4a37-9c79-c845d347956d",
+    pagina: "https://hoteljasmin.com/webcam/",
+  },
 ];
 
 export function WebcamCard() {
