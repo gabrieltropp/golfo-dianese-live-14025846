@@ -24,6 +24,7 @@ const WEBCAMS: Webcam[] = [
     src: "https://g0.ipcamlive.com/player/player.php?alias=hotelgabriella&skin=white&autoplay=1&disablezoombutton=1&disableframecapture=1&disabletimelapseplayer=1&disabledownloadbutton=1&disableplaybackspeedbutton=1",
     pagina: "https://www.hotelgabriella.it/webcam-meteo-diano-marina",
   },
+  
 ];
 
 export function WebcamCard() {
