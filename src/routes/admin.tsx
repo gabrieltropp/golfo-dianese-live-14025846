@@ -140,6 +140,55 @@ function ReportsQueue({ locale }: { locale: string }) {
   );
 }
 
+/**
+ * Tasto di refresh manuale: richiama gli stessi endpoint di scraping usati
+ * dal cron automatico (refresh-avvisi e refresh-balneazione), poi invalida
+ * le query così il pannello "Stato aggiornamenti" e le altre sezioni
+ * mostrano subito i dati appena raccolti, senza aspettare la prossima
+ * esecuzione schedulata.
+ */
+function RefreshSourcesButton() {
+  const { t } = useI18n();
+  const qc = useQueryClient();
+  const [busy, setBusy] = useState(false);
+
+  async function refreshNow() {
+    setBusy(true);
+    const jobs: Array<{ label: string; url: string }> = [
+      { label: "Avvisi Comuni + Rivieracqua", url: "/api/public/hooks/refresh-avvisi" },
+      { label: "Balneabilità ARPAL", url: "/api/public/hooks/refresh-balneazione" },
+    ];
+    const results = await Promise.allSettled(
+      jobs.map(async (job) => {
+        const res = await fetch(job.url, { method: "POST" });
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok || body?.ok === false) {
+          throw new Error(body?.error || `${job.label}: errore ${res.status}`);
+        }
+        return job.label;
+      }),
+    );
+    results.forEach((r, i) => {
+      if (r.status === "fulfilled") toast.success(`${jobs[i].label}: aggiornato`);
+      else toast.error(`${jobs[i].label}: ${r.reason instanceof Error ? r.reason.message : r.reason}`);
+    });
+    setBusy(false);
+    qc.invalidateQueries({ queryKey: ["fonti-stato"] });
+    qc.invalidateQueries({ queryKey: ["bathing-water"] });
+  }
+
+  return (
+    <button
+      type="button"
+      disabled={busy}
+      onClick={refreshNow}
+      className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60"
+    >
+      {busy ? `${t("admin.refreshNow")}…` : t("admin.refreshNow")}
+    </button>
+  );
+}
+
 function UpdateStatusPanel({ locale }: { locale: string }) {
   const { t } = useI18n();
   const { data } = useQuery({
@@ -151,7 +200,10 @@ function UpdateStatusPanel({ locale }: { locale: string }) {
 
   return (
     <section className="rounded-3xl border border-border bg-card p-5">
-      <h2 className="mb-3 text-xl font-bold">{t("admin.updates")}</h2>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-xl font-bold">{t("admin.updates")}</h2>
+        <RefreshSourcesButton />
+      </div>
       <div className="w-full max-w-full overflow-x-auto">
         <table className="w-full min-w-[34rem] text-left text-sm">
           <thead className="text-xs uppercase tracking-wide text-muted-foreground">
