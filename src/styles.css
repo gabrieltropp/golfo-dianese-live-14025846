@@ -162,7 +162,7 @@
   --font-sans: "Inter Tight", ui-sans-serif, system-ui, sans-serif;
 }
 
-/* ---- Animazione d'ingresso delle card (solo transform + opacity) ---- */
+/* ---- Animazione d'ingresso delle card (solo transform + opacity ---- */
 .reveal {
   will-change: transform, opacity;
 }
