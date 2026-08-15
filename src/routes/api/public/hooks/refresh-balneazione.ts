@@ -1,13 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 async function run() {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { scrapeBalneazione } = await import("@/lib/scrape.server");
-
   const now = new Date().toISOString();
   const anno = new Date().getUTCFullYear();
 
   try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { scrapeBalneazione } = await import("@/lib/scrape.server");
+
     const results = await scrapeBalneazione(anno, now);
 
     // Coherence check: a sampling date older than the one already stored for the
@@ -64,23 +64,31 @@ async function run() {
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     console.error("[refresh-balneazione]", message);
-    const { data: prev } = await supabaseAdmin
-      .from("fonti_stato")
-      .select("last_success_at, fail_streak")
-      .eq("fonte", "ARPAL Balneazione")
-      .maybeSingle();
-    await supabaseAdmin.from("fonti_stato").upsert(
-      {
-        fonte: "ARPAL Balneazione",
-        ok: false,
-        error: message.slice(0, 500),
-        items: 0,
-        last_success_at: prev?.last_success_at ?? null,
-        fetched_at: now,
-        fail_streak: (prev?.fail_streak ?? 0) + 1,
-      },
-      { onConflict: "fonte" },
-    );
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: prev } = await supabaseAdmin
+        .from("fonti_stato")
+        .select("last_success_at, fail_streak")
+        .eq("fonte", "ARPAL Balneazione")
+        .maybeSingle();
+      await supabaseAdmin.from("fonti_stato").upsert(
+        {
+          fonte: "ARPAL Balneazione",
+          ok: false,
+          error: message.slice(0, 500),
+          items: 0,
+          last_success_at: prev?.last_success_at ?? null,
+          fetched_at: now,
+          fail_streak: (prev?.fail_streak ?? 0) + 1,
+        },
+        { onConflict: "fonte" },
+      );
+    } catch (statusError) {
+      // Se anche la scrittura dello stato fallisce (es. credenziali Supabase
+      // mancanti), non deve mai risultare in un 500 senza messaggio: il
+      // messaggio originale viene comunque restituito sotto.
+      console.error("[refresh-balneazione] impossibile scrivere fonti_stato:", statusError);
+    }
     return Response.json({ ok: false, error: message }, { status: 502 });
   }
 }
