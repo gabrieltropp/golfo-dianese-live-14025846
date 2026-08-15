@@ -166,13 +166,17 @@
 .reveal {
   will-change: transform, opacity;
 }
-
+ 
 .reveal.is-in {
   opacity: 1;
-  transform: translateY(0) rotate(0deg);
+  transform: translate3d(0, 0, 0) rotate(0deg);
   transition:
     transform 250ms ease-out,
     opacity 250ms ease-out;
+  /* Una volta raggiunto lo stato finale, non serve più il suggerimento
+     will-change: lasciarlo attivo indefinitamente può causare glitch di
+     compositing su Safari/iOS, specie con lo sfondo video fisso sotto. */
+  will-change: auto;
 }
 
 @media (hover: hover) and (pointer: fine) {

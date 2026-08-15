@@ -5,6 +5,13 @@ import { cn } from "@/lib/utils";
  * Card che entra in scena "fluttuante e obliqua" e si raddrizza in modo
  * legato allo scroll (serve ~una schermata intera per completare).
  * Anima solo transform/opacity e, una volta dritta, non torna mai obliqua.
+ *
+ * Fix: il calcolo legato allo scroll ora si attiva solo mentre la card è
+ * realmente vicina al viewport (via IntersectionObserver), invece di tenere
+ * un listener di scroll globale sempre attivo per ogni card della pagina.
+ * Questo evita che più card insieme saturino il thread principale su mobile
+ * proprio nel momento della transizione, che è la causa più probabile per
+ * cui la card non si stabilizzava correttamente nello stato finale.
  */
 export function Reveal({
   index = 0,
@@ -18,6 +25,7 @@ export function Reveal({
   const ref = useRef<HTMLDivElement>(null);
   const [progress, setProgress] = useState(0);
   const [done, setDone] = useState(false);
+  const doneRef = useRef(false);
 
   useEffect(() => {
     const el = ref.current;
@@ -27,16 +35,26 @@ export function Reveal({
       typeof window !== "undefined" &&
       window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     if (reduce) {
+      doneRef.current = true;
       setProgress(1);
       setDone(true);
       return;
     }
 
     let raf = 0;
-    let finished = false;
+    let listening = false;
+
+    const finish = () => {
+      doneRef.current = true;
+      setDone(true);
+      io.disconnect();
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
 
     const compute = () => {
       raf = 0;
+      if (doneRef.current) return; // guardia extra: mai ricalcolare dopo il traguardo
       const rect = el.getBoundingClientRect();
       const vh = window.innerHeight || 1;
       // 0 quando il bordo alto della card entra dal fondo,
@@ -44,23 +62,33 @@ export function Reveal({
       const travelled = vh - rect.top;
       const p = Math.min(1, Math.max(0, travelled / (vh * 0.92)));
       setProgress(p);
-      if (p >= 1 && !finished) {
-        finished = true;
-        setDone(true);
-        window.removeEventListener("scroll", onScroll);
-        window.removeEventListener("resize", onScroll);
-      }
+      if (p >= 1) finish();
     };
 
     const onScroll = () => {
       if (!raf) raf = requestAnimationFrame(compute);
     };
 
+    // Ascolta lo scroll globale solo mentre la card è vicina al viewport:
+    // niente listener permanenti per ogni card su tutta la pagina.
+    const io = new IntersectionObserver(
+      (entries) => {
+        const near = entries.some((entry) => entry.isIntersecting);
+        if (near && !listening) {
+          listening = true;
+          compute();
+          window.addEventListener("scroll", onScroll, { passive: true });
+          window.addEventListener("resize", onScroll);
+        }
+      },
+      { rootMargin: "100% 0px 100% 0px" },
+    );
+    io.observe(el);
     compute();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
+
     return () => {
       if (raf) cancelAnimationFrame(raf);
+      io.disconnect();
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
     };
@@ -78,7 +106,7 @@ export function Reveal({
         done
           ? undefined
           : ({
-              transform: `translateY(${(1 - eased) * 70}px) rotate(${(1 - eased) * rot}deg)`,
+              transform: `translate3d(0, ${(1 - eased) * 70}px, 0) rotate(${(1 - eased) * rot}deg)`,
               opacity: 0.35 + eased * 0.65,
             } as React.CSSProperties)
       }
