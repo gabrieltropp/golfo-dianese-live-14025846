@@ -1,12 +1,32 @@
-import { createFileRoute } from "@tanstack/react-router";
+// Edge Function (Deno) — sostituisce la vecchia route Cloudflare
+// /api/public/hooks/refresh-balneazione, per lo stesso motivo di
+// refresh-avvisi: Deno ha un fetch nativo completo, niente compat layer.
+import { createClient } from "npm:@supabase/supabase-js@2";
+import { scrapeBalneazione } from "../_shared/scrape.ts";
 
-async function run() {
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+function json(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
   const now = new Date().toISOString();
   const anno = new Date().getUTCFullYear();
 
   try {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { scrapeBalneazione } = await import("@/lib/scrape.server");
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
 
     const results = await scrapeBalneazione(anno, now);
 
@@ -31,17 +51,11 @@ async function run() {
 
     const { error: pErr } = await supabaseAdmin
       .from("punti_balneazione")
-      .upsert(
-        results.map((r) => r.punto),
-        { onConflict: "codice_acqua" },
-      );
+      .upsert(results.map((r) => r.punto), { onConflict: "codice_acqua" });
     if (pErr) throw new Error(pErr.message);
     const { error: sErr } = await supabaseAdmin
       .from("balneazione_stato")
-      .upsert(
-        results.map((r) => r.stato),
-        { onConflict: "codice_acqua" },
-      );
+      .upsert(results.map((r) => r.stato), { onConflict: "codice_acqua" });
     if (sErr) throw new Error(sErr.message);
 
     await supabaseAdmin.from("fonti_stato").upsert(
@@ -60,12 +74,15 @@ async function run() {
       },
       { onConflict: "fonte" },
     );
-    return Response.json({ ok: true, at: now, anno, points: results.length, anomalie });
+    return json({ ok: true, at: now, anno, points: results.length, anomalie });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     console.error("[refresh-balneazione]", message);
     try {
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const supabaseAdmin = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      );
       const { data: prev } = await supabaseAdmin
         .from("fonti_stato")
         .select("last_success_at, fail_streak")
@@ -84,20 +101,8 @@ async function run() {
         { onConflict: "fonte" },
       );
     } catch (statusError) {
-      // Se anche la scrittura dello stato fallisce (es. credenziali Supabase
-      // mancanti), non deve mai risultare in un 500 senza messaggio: il
-      // messaggio originale viene comunque restituito sotto.
       console.error("[refresh-balneazione] impossibile scrivere fonti_stato:", statusError);
     }
-    return Response.json({ ok: false, error: message }, { status: 502 });
+    return json({ ok: false, error: message }, 502);
   }
-}
-
-export const Route = createFileRoute("/api/public/hooks/refresh-balneazione")({
-  server: {
-    handlers: {
-      GET: async () => run(),
-      POST: async () => run(),
-    },
-  },
 });

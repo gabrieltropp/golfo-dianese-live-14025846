@@ -1,4 +1,8 @@
-import * as cheerio from "cheerio";
+// Stessa identica logica di src/lib/scrape.server.ts, adattata per girare come
+// Supabase Edge Function (Deno). L'unica differenza reale è l'import di cheerio
+// via specifier "npm:", che su Deno funziona senza bisogno del Node compat layer
+// che causava l'errore "markAsUncloneable" su Cloudflare Workers.
+import * as cheerio from "npm:cheerio@1.0.0";
 
 export type AvvisoRow = {
   fonte: string;
@@ -11,7 +15,6 @@ export type AvvisoRow = {
   fetched_at: string;
   comuni_citati?: string[];
   data_intervento?: string | null;
-  /** True when the publication date could not be determined with certainty. */
   necessita_revisione?: boolean;
 };
 
@@ -31,7 +34,6 @@ async function getText(url: string): Promise<string> {
 }
 
 async function getJson<T>(url: string): Promise<T> {
-  // Always hit the origin: no CDN/runtime cache may serve a stale ARPAL payload.
   const bust = `${url.includes("?") ? "&" : "?"}_ts=${Date.now()}`;
   const res = await fetch(url + bust, {
     cache: "no-store",
@@ -50,16 +52,11 @@ function clean(s: string | undefined | null): string {
   return (s ?? "").replace(/\s+/g, " ").trim();
 }
 
-function stripHtml(s: string): string {
-  return clean(cheerio.load(`<div>${s}</div>`)("div").text());
-}
-
 const MESI: Record<string, number> = {
   gennaio: 1, febbraio: 2, marzo: 3, aprile: 4, maggio: 5, giugno: 6,
   luglio: 7, agosto: 8, settembre: 9, ottobre: 10, novembre: 11, dicembre: 12,
 };
 
-/** Reads the authoritative publication date from a WordPress/schema.org page. */
 export function extractPublishedTime(html: string): string | null {
   const m =
     html.match(/property=["']article:published_time["']\s+content=["']([^"']+)["']/i) ??
@@ -71,7 +68,6 @@ export function extractPublishedTime(html: string): string | null {
   return Number.isNaN(d.getTime()) ? null : d.toISOString();
 }
 
-/** Parses Italian dates such as "29 Aprile 2026", "30 lug 2026", "09.07.26". Returns ISO or null. */
 export function parseItalianDate(raw: string): string | null {
   const text = clean(raw).toLowerCase();
   const iso = text.match(/(\d{4})-(\d{2})-(\d{2})/);
@@ -123,7 +119,10 @@ export async function scrapeDianoMarina(now: string): Promise<AvvisoRow[]> {
         fonte: "Comune di Diano Marina",
         comune: "Diano Marina",
         titolo,
-        testo_breve: clean(card.find(".card-body > p").not(".time-created-news-list").not(".tag-categorie").first().text()) || null,
+        testo_breve:
+          clean(
+            card.find(".card-body > p").not(".time-created-news-list").not(".tag-categorie").first().text(),
+          ) || null,
         url,
         data_pubblicazione: data,
         necessita_revisione: data === null,
@@ -135,14 +134,6 @@ export async function scrapeDianoMarina(now: string): Promise<AvvisoRow[]> {
   if (rows.length === 0) throw new Error("Diano Marina: nessun elemento trovato (markup cambiato?)");
   return rows;
 }
-
-type WpPost = {
-  link: string;
-  date_gmt: string;
-  title: { rendered: string };
-  excerpt?: { rendered: string };
-  content?: { rendered: string };
-};
 
 /** Comune di San Bartolomeo al Mare — news list at /novita/. */
 export async function scrapeSanBartolomeo(now: string): Promise<AvvisoRow[]> {
@@ -171,8 +162,7 @@ export async function scrapeSanBartolomeo(now: string): Promise<AvvisoRow[]> {
       fetched_at: now,
     });
   });
-  if (rows.length === 0)
-    throw new Error("San Bartolomeo: nessun elemento trovato (markup cambiato?)");
+  if (rows.length === 0) throw new Error("San Bartolomeo: nessun elemento trovato (markup cambiato?)");
   return rows;
 }
 
@@ -209,7 +199,6 @@ export async function scrapeCervo(now: string): Promise<AvvisoRow[]> {
   return rows;
 }
 
-/** Comuni recognised inside Rivieracqua notices (whole province, not only the gulf). */
 const COMUNI_PATTERNS: Array<{ comune: string; pattern: RegExp }> = [
   { comune: "Diano Marina", pattern: /diano\s+marina/i },
   { comune: "Diano Castello", pattern: /diano\s+castello/i },
@@ -244,7 +233,6 @@ export function extractComuniCitati(text: string): string[] {
   return COMUNI_PATTERNS.filter(({ pattern }) => pattern.test(text)).map((c) => c.comune);
 }
 
-/** Pulls an "intervento" date/time hint from the notice body, when present. */
 export function extractDataIntervento(text: string): string | null {
   const m =
     text.match(/data\s+(?:e\s+ora\s+)?(?:dell'?\s*)?intervento\s*[:_*\-–\s]*([^_*.;\n]{4,120})/i) ??
@@ -264,14 +252,9 @@ export async function scrapeRivieracqua(now: string): Promise<AvvisoRow[]> {
     const titolo = clean(card.find("h5.post-title").first().text());
     if (!href || !titolo || seen.has(href)) return;
     seen.add(href);
-    items.push({
-      url: href,
-      titolo,
-      excerpt: clean(card.find(".from_the_blog_excerpt").first().text()),
-    });
+    items.push({ url: href, titolo, excerpt: clean(card.find(".from_the_blog_excerpt").first().text()) });
   });
-  if (items.length === 0)
-    throw new Error("Rivieracqua: nessun avviso trovato (markup cambiato?)");
+  if (items.length === 0) throw new Error("Rivieracqua: nessun avviso trovato (markup cambiato?)");
 
   const rows: AvvisoRow[] = [];
   for (const item of items.slice(0, 15)) {
@@ -289,8 +272,6 @@ export async function scrapeRivieracqua(now: string): Promise<AvvisoRow[]> {
     }
     const haystack = `${item.titolo} ${body}`;
     const comuni = extractComuniCitati(haystack);
-    // Authoritative order: the article's own published_time, then the date in the title.
-    // Never guess from the scrape time — an unknown date stays null.
     const data = published ?? parseItalianDate(item.titolo);
     rows.push({
       fonte: "Rivieracqua",
@@ -313,7 +294,6 @@ export async function scrapeRivieracqua(now: string): Promise<AvvisoRow[]> {
 
 const ARPAL_API = "https://aws.arpal.liguria.it/siapi/Service/Query";
 
-/** ARPAL comune label -> label used in the app. */
 export const ARPAL_COMUNI: Array<{ arpal: string; comune: string; ordine: number }> = [
   { arpal: "Diano Marina", comune: "Diano Marina", ordine: 100 },
   { arpal: "S.Bartolomeo Al Mare", comune: "San Bartolomeo al Mare", ordine: 200 },
@@ -380,12 +360,8 @@ export async function scrapeBalneazione(anno: number, now: string): Promise<Baln
     const points = await getJson<ArpalPoint[]>(
       `${ARPAL_API}/BalneazioneRete?ANNO=${anno}&PROVINCIA=Imperia&COMUNE=${encodeURIComponent(arpal)}`,
     );
-    const sorted = [...points].sort((a, b) =>
-      a.DESCRIZIONE_ACQUA.localeCompare(b.DESCRIZIONE_ACQUA, "it"),
-    );
+    const sorted = [...points].sort((a, b) => a.DESCRIZIONE_ACQUA.localeCompare(b.DESCRIZIONE_ACQUA, "it"));
     for (const [i, p] of sorted.entries()) {
-      // The sampling date must come from the analysis table, taking the MOST RECENT
-      // sampling of the season — never the first row, which is often the oldest.
       const sampled = await latestSamplingDate(anno, p.CODICE_ACQUA);
       out.push({
         punto: {

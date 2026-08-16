@@ -154,17 +154,15 @@ function RefreshSourcesButton() {
 
   async function refreshNow() {
     setBusy(true);
-    const jobs: Array<{ label: string; url: string }> = [
-      { label: "Avvisi Comuni + Rivieracqua", url: "/api/public/hooks/refresh-avvisi" },
-      { label: "Balneabilità ARPAL", url: "/api/public/hooks/refresh-balneazione" },
+    const jobs: Array<{ label: string; fn: string }> = [
+      { label: "Avvisi Comuni + Rivieracqua", fn: "refresh-avvisi" },
+      { label: "Balneabilità ARPAL", fn: "refresh-balneazione" },
     ];
     const results = await Promise.allSettled(
       jobs.map(async (job) => {
-        const res = await fetch(job.url, { method: "POST" });
-        const body = await res.json().catch(() => ({}));
-        if (!res.ok || body?.ok === false) {
-          throw new Error(body?.error || `${job.label}: errore ${res.status}`);
-        }
+        const { data, error } = await supabase.functions.invoke(job.fn, { method: "POST" });
+        if (error) throw new Error(error.message);
+        if (data?.ok === false) throw new Error(data?.error || `${job.label}: errore`);
         return job.label;
       }),
     );

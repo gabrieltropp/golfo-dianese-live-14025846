@@ -1,1 +1,10 @@
 project_id = "yclutqtzykyjypracnac"
+
+# Nessuna verifica JWT: stesso livello di accesso delle vecchie route
+# pubbliche /api/public/hooks/..., pensate per essere richiamate dal cron
+# interno (pg_cron) e dal pulsante "Aggiorna adesso" nel pannello admin.
+[functions.refresh-avvisi]
+verify_jwt = false
+
+[functions.refresh-balneazione]
+verify_jwt = false
