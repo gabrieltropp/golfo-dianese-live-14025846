@@ -1,4 +1,4 @@
-project_id = "yclutqtzykyjypracnac"
+project_id = "mheopmruscwdlsdtkfri"
 
 # Nessuna verifica JWT: stesso livello di accesso delle vecchie route
 # pubbliche /api/public/hooks/..., pensate per essere richiamate dal cron
