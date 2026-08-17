@@ -116,6 +116,25 @@ export async function fetchBikePath() {
   return (data ?? []) as unknown as BikePath[];
 }
 
+export type BikeSegment = {
+  id: number;
+  da: string;
+  a: string;
+  ordine: number;
+  stato: "open" | "closed";
+  nota: string | null;
+};
+
+export async function fetchBikeSegments() {
+  const { data, error } = await supabase
+    .from("tratti_ciclabile")
+    .select("*")
+    .order("ordine", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as unknown as BikeSegment[];
+}
+
+
 export const ARPAL_URL =
   "https://www.arpal.liguria.it/tematiche/mare/balneabilita.html?ANNO=2026&CODICE_ACQUA=IT007008027A001&PROVINCIA=Imperia&COMUNE=Diano+Marina";
 

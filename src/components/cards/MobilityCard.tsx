@@ -3,38 +3,51 @@ import { useQuery } from "@tanstack/react-query";
 import { Car, Bike } from "lucide-react";
 import { StatusCard, StatusBadge, type StatusTone } from "@/components/StatusCard";
 import { useI18n } from "@/lib/i18n";
-import { fetchBikePath } from "@/lib/civic-data";
+import { fetchBikePath, fetchBikeSegments, type BikeSegment } from "@/lib/civic-data";
 
-const STOPS = ["Imperia", "Diano Marina", "San Bartolomeo", "Cervo", "Andora"];
-
-function BikeRoute({ blocked }: { blocked: boolean }) {
-  // Highlight the Diano Marina - San Bartolomeo leg when the path is not fully open.
-  const brokenLeg = 1;
+function BikeRoute({ segments }: { segments: BikeSegment[] }) {
+  if (segments.length === 0) return null;
+  const stops = [segments[0].da, ...segments.map((s) => s.a)];
   return (
     <div className="glass-soft w-full max-w-full overflow-hidden rounded-2xl p-4">
       <div className="flex items-center">
-        {STOPS.map((stop, i) => (
-          <div key={stop} className="flex flex-1 items-center last:flex-none">
+        {stops.map((stop, i) => (
+          <div key={stop + i} className="flex flex-1 items-center last:flex-none">
             <span className="size-3 shrink-0 rounded-full bg-sand/80" aria-hidden="true" />
-            {i < STOPS.length - 1 ? (
+            {i < stops.length - 1 ? (
               <span
                 className={
                   "h-1.5 flex-1 rounded-full " +
-                  (blocked && i === brokenLeg ? "bg-status-red" : "bg-status-green")
+                  (segments[i].stato === "closed" ? "bg-status-red" : "bg-status-green")
                 }
                 aria-hidden="true"
+                title={segments[i].nota ?? undefined}
               />
             ) : null}
           </div>
         ))}
       </div>
       <div className="mt-2 flex justify-between gap-1 text-[0.7rem] font-semibold text-muted-foreground">
-        {STOPS.map((stop) => (
-          <span key={stop} className="flex-1 text-center first:text-left last:text-right">
+        {stops.map((stop, i) => (
+          <span key={stop + i} className="flex-1 text-center first:text-left last:text-right">
             {stop}
           </span>
         ))}
       </div>
+      {segments.some((s) => s.stato === "closed" && s.nota) ? (
+        <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
+          {segments
+            .filter((s) => s.stato === "closed" && s.nota)
+            .map((s) => (
+              <li key={s.id}>
+                <span className="font-semibold text-status-red">
+                  {s.da} → {s.a}:
+                </span>{" "}
+                {s.nota}
+              </li>
+            ))}
+        </ul>
+      ) : null}
     </div>
   );
 }
@@ -101,11 +114,22 @@ export function MobilityCard() {
     queryFn: fetchBikePath,
     staleTime: 5 * 60 * 1000,
   });
+  const { data: segments } = useQuery({
+    queryKey: ["bike-segments"],
+    queryFn: fetchBikeSegments,
+    staleTime: 5 * 60 * 1000,
+  });
 
   const path = data?.[0];
-  const bikeTone: StatusTone =
-    path?.status === "closed" ? "red" : path?.status === "works" ? "yellow" : "green";
-  const bikeLabel = path ? t(`mobility.bike.${path.status}`) : t("mobility.bike.open");
+  const anySegmentClosed = (segments ?? []).some((s) => s.stato === "closed");
+  const bikeTone: StatusTone = anySegmentClosed
+    ? "red"
+    : path?.status === "closed"
+      ? "red"
+      : path?.status === "works"
+        ? "yellow"
+        : "green";
+  const bikeLabel = bikeTone === "red" ? t("mobility.bike.closed") : t("mobility.bike.open");
   const message = path ? (lang === "it" ? path.message_it : (path.message_en ?? path.message_it)) : null;
 
   return (
@@ -130,17 +154,11 @@ export function MobilityCard() {
             <StatusBadge tone={bikeTone} label={bikeLabel} />
           </div>
           <p className="mb-2 text-sm font-semibold text-muted-foreground">{t("mobility.route")}</p>
-          <BikeRoute blocked={bikeTone !== "green"} />
+          <BikeRoute segments={segments ?? []} />
           <p className="mt-2 text-sm">
             {bikeTone === "green" ? t("mobility.routeOk") : t("mobility.routeBlocked")}
           </p>
-          {path ? <p className="text-sm font-semibold">{path.segment}</p> : null}
           {message ? <p className="mt-1 text-sm">{message}</p> : null}
-          {path ? (
-            <p className="mt-2 text-xs text-muted-foreground">
-              {t("app.updated")}: {new Date(path.updated_at).toLocaleString(lang)}
-            </p>
-          ) : null}
           <p className="mt-2 text-xs text-muted-foreground">{t("mobility.bikeNote")}</p>
         </div>
 

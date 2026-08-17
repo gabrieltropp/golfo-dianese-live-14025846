@@ -9,6 +9,7 @@ import { useI18n } from "@/lib/i18n";
 import {
   fetchBathingWater,
   fetchBikePath,
+  fetchBikeSegments,
   fetchFontiStato,
   fetchWaterAdvisories,
   STALE_AFTER_FAILURES,
@@ -202,7 +203,50 @@ function UpdateStatusPanel({ locale }: { locale: string }) {
         <h2 className="text-xl font-bold">{t("admin.updates")}</h2>
         <RefreshSourcesButton />
       </div>
-      <div className="w-full max-w-full overflow-x-auto">
+      {/* Mobile: elenco di card impilate, più facile da leggere e toccare */}
+      <div className="grid gap-3 md:hidden">
+        {rows.map((f) => {
+          const streak = f.fail_streak ?? 0;
+          return (
+            <div key={f.fonte} className="rounded-2xl border border-border/60 p-3 text-sm">
+              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                <span className="font-semibold">{f.fonte}</span>
+                <span
+                  className={
+                    "rounded-full px-2 py-0.5 text-xs font-bold " +
+                    (f.ok
+                      ? "bg-status-green text-status-green-foreground"
+                      : "bg-status-red text-status-red-foreground")
+                  }
+                >
+                  {f.ok ? "OK" : "ERR"}
+                </span>
+              </div>
+              {f.error ? <p className="mb-2 text-xs text-muted-foreground">{f.error}</p> : null}
+              <dl className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                <dt>{t("admin.lastOk")}</dt>
+                <dd className="text-right">
+                  {f.last_success_at ? new Date(f.last_success_at).toLocaleString(locale) : "—"}
+                </dd>
+                <dt>{t("admin.lastTry")}</dt>
+                <dd className="text-right">{new Date(f.fetched_at).toLocaleString(locale)}</dd>
+                <dt>{t("admin.errors")}</dt>
+                <dd className={"text-right font-bold " + (streak >= STALE_AFTER_FAILURES ? "text-status-red" : "")}>
+                  {streak}
+                </dd>
+              </dl>
+              {f.anomalia ? (
+                <span className="mt-2 block rounded-lg bg-status-red/15 px-2 py-1 text-xs font-semibold text-status-red">
+                  {f.anomalia}
+                </span>
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Desktop/tablet: tabella completa */}
+      <div className="hidden w-full max-w-full overflow-x-auto md:block">
         <table className="w-full min-w-[34rem] text-left text-sm">
           <thead className="text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
@@ -362,6 +406,18 @@ function Panel() {
   const bathing = useQuery({ queryKey: ["bathing-water"], queryFn: fetchBathingWater });
   const advisories = useQuery({ queryKey: ["water-advisories"], queryFn: fetchWaterAdvisories });
   const bike = useQuery({ queryKey: ["bike-path"], queryFn: fetchBikePath });
+  const segments = useQuery({ queryKey: ["bike-segments-admin"], queryFn: fetchBikeSegments });
+
+  async function saveSegment(id: number, stato: string, nota: string) {
+    const { error } = await supabase
+      .from("tratti_ciclabile")
+      .update({ stato, nota: nota || null, updated_at: new Date().toISOString() })
+      .eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success(t("admin.save"));
+    qc.invalidateQueries({ queryKey: ["bike-segments-admin"] });
+    qc.invalidateQueries({ queryKey: ["bike-segments"] });
+  }
 
   const [newAdvisory, setNewAdvisory] = useState({
     zone: "",
@@ -520,6 +576,41 @@ function Panel() {
           </form>
         ))}
       </section>
+
+      <section className={card}>
+        <h2 className="mb-1 text-xl font-bold">Tratti pista ciclabile</h2>
+        <p className="mb-3 text-sm text-muted-foreground">
+          Chiudi o riapri ogni singolo tratto: il tratto chiuso appare in rosso nella mappa del sito.
+        </p>
+        <div className="grid gap-3">
+          {(segments.data ?? []).map((s) => (
+            <form
+              key={s.id}
+              className="grid gap-2 rounded-2xl border border-border/60 p-3"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const f = new FormData(e.currentTarget);
+                saveSegment(s.id, String(f.get("stato")), String(f.get("nota")));
+              }}
+            >
+              <p className="text-sm font-semibold">
+                {s.da} → {s.a}
+              </p>
+              <select name="stato" defaultValue={s.stato} className={input}>
+                <option value="open">Aperto</option>
+                <option value="closed">Chiuso</option>
+              </select>
+              <input
+                name="nota"
+                placeholder="Nota (facoltativa, es. motivo/durata della chiusura)"
+                defaultValue={s.nota ?? ""}
+                className={input}
+              />
+              <button className={btn}>{t("admin.save")}</button>
+            </form>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
@@ -555,9 +646,9 @@ function AdminPage() {
   return (
     <div className="min-h-screen bg-background">
       <Toaster />
-      <header className="surface-sea px-5 py-5">
-        <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
-          <h1 className="text-xl font-bold">{t("admin.title")}</h1>
+      <header className="surface-sea px-4 py-4 sm:px-5 sm:py-5">
+        <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-3">
+          <h1 className="text-lg font-bold sm:text-xl">{t("admin.title")}</h1>
           {session ? (
             <button
               onClick={() => supabase.auth.signOut()}
@@ -568,7 +659,7 @@ function AdminPage() {
           ) : null}
         </div>
       </header>
-      <main className="mx-auto max-w-3xl px-4 py-6">
+      <main className="mx-auto max-w-3xl px-3 py-5 sm:px-4 sm:py-6">
         {!ready ? (
           <p className="text-muted-foreground">{t("app.loading")}</p>
         ) : !session ? (
