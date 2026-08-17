@@ -111,7 +111,7 @@ export const siteConfig = {
   temi: {
     bluNotte: "#0E3A73",
     sabbiaChiara: "#F2B84B",
-    accentoCaldo: "#F2E416",
+    accentoCaldo: "#ffffff",
     accentoFreddo: "#317D8F",
     dettagliTenui: "#5DAC53",
   } satisfies SiteThemeGroups,
