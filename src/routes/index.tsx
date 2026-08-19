@@ -14,6 +14,7 @@ import { useI18n } from "@/lib/i18n";
 import { ARPAL_URL } from "@/lib/civic-data";
 import { siteConfig } from "@/config/site-config";
 import bgVideo from "@/assets/sunrisediano.mp4.asset.json";
+import bgPoster from "@/assets/poster-hero.jpg";
 
 const DESC =
   "Allerta meteo Protezione Civile, balneabilità ARPAL, avvisi acqua potabile e mobilità per Diano Marina e il Golfo Dianese.";
@@ -42,6 +43,7 @@ function Index() {
       >
         <video
           src={bgVideo.url}
+          poster={bgPoster}
           autoPlay
           muted
           loop
