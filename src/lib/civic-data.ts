@@ -35,6 +35,43 @@ export async function fetchAlert(slug: string): Promise<AlertResponse> {
   return json.data;
 }
 
+export type AlertOverride = {
+  giorno: "oggi" | "domani";
+  attivo: boolean;
+  colore: AlertColor;
+  descrizione: string | null;
+  idraulico: string | null;
+  idrogeologico: string | null;
+  temporali: string | null;
+  updated_at: string;
+};
+
+/**
+ * Override manuale, usato SOLO come ripiego quando la fonte ufficiale
+ * (allertameteo.app) non è raggiungibile — non sostituisce mai un dato
+ * ufficiale valido.
+ */
+export async function fetchAlertOverride(): Promise<AlertOverride[]> {
+  const { data, error } = await supabase.from("allerta_override").select("*");
+  if (error) throw error;
+  return (data ?? []) as unknown as AlertOverride[];
+}
+
+export function overrideToDay(o: AlertOverride): AlertDay {
+  return {
+    allerta: {
+      colore: o.colore,
+      descrizione: o.descrizione ?? "",
+      livello: { verde: 0, giallo: 1, arancione: 2, rosso: 3 }[o.colore],
+    },
+    dettagli: {
+      idraulico: o.idraulico ?? "—",
+      idrogeologico: o.idrogeologico ?? "—",
+      temporali: o.temporali ?? "—",
+    },
+  };
+}
+
 export type WeatherNow = {
   temperature: number;
   wind: number;

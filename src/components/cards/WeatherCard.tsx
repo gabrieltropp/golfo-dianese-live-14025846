@@ -6,7 +6,9 @@ import { useI18n } from "@/lib/i18n";
 import {
   COMUNI,
   fetchAlert,
+  fetchAlertOverride,
   fetchWeather,
+  overrideToDay,
   weatherDescription,
   type AlertColor,
   type AlertDay,
@@ -86,6 +88,12 @@ export function WeatherCard() {
     queryKey: ["alert", slug],
     queryFn: () => fetchAlert(slug),
     staleTime: 10 * 60 * 1000,
+    retry: 1,
+  });
+  const overrideQuery = useQuery({
+    queryKey: ["allerta-override"],
+    queryFn: fetchAlertOverride,
+    staleTime: 5 * 60 * 1000,
   });
   const weatherQuery = useQuery({
     queryKey: ["weather", comune.lat, comune.lon],
@@ -93,7 +101,13 @@ export function WeatherCard() {
     staleTime: 15 * 60 * 1000,
   });
 
-  const color = alertQuery.data?.oggi.allerta.colore;
+  const overrideOggi = overrideQuery.data?.find((o) => o.giorno === "oggi" && o.attivo);
+  const overrideDomani = overrideQuery.data?.find((o) => o.giorno === "domani" && o.attivo);
+  const usingOverride = alertQuery.isError && !!overrideOggi;
+  const oggi = alertQuery.data?.oggi ?? (overrideOggi ? overrideToDay(overrideOggi) : undefined);
+  const domani = alertQuery.data?.domani ?? (overrideDomani ? overrideToDay(overrideDomani) : undefined);
+
+  const color = oggi?.allerta.colore;
   const tone: StatusTone = color ? TONE_BY_COLOR[color] : "grey";
   const statusLabel = color
     ? (LABEL_BY_COLOR[color][lang] ?? LABEL_BY_COLOR[color].en)
@@ -155,11 +169,16 @@ export function WeatherCard() {
         </>
       ) : null}
 
-      {alertQuery.data ? (
+      {oggi ? (
         <div className="grid gap-3">
-          <DayBlock title={t("weather.today")} day={alertQuery.data.oggi} />
-          <DayBlock title={t("weather.tomorrow")} day={alertQuery.data.domani} />
-          {alertQuery.data.bulletin_info?.data_bollettino ? (
+          {usingOverride ? (
+            <p className="rounded-xl bg-status-yellow/15 px-3 py-2 text-xs font-semibold text-status-yellow">
+              ⚠ {t("weather.overrideActive")}
+            </p>
+          ) : null}
+          <DayBlock title={t("weather.today")} day={oggi} />
+          {domani ? <DayBlock title={t("weather.tomorrow")} day={domani} /> : null}
+          {alertQuery.data?.bulletin_info?.data_bollettino ? (
             <p className="text-sm text-muted-foreground">
               {t("weather.bulletin")}: {alertQuery.data.bulletin_info.data_bollettino}{" "}
               {alertQuery.data.bulletin_info.ora_bollettino}

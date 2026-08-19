@@ -28,6 +28,8 @@ const it: Dict = {
   "weather.temp": "Temperatura",
   "weather.wind": "Vento",
   "weather.bulletin": "Bollettino",
+  "weather.overrideActive":
+    "Fonte ufficiale non raggiungibile: dato inserito manualmente dall'amministratore",
   "weather.source": "Fonte: Protezione Civile via allertameteo.app · Meteo: Open-Meteo",
   "bathing.compliant": "Acqua conforme",
   "bathing.nonCompliant": "Non conforme",
@@ -182,6 +184,7 @@ const en: Dict = {
   "weather.temp": "Temperature",
   "weather.wind": "Wind",
   "weather.bulletin": "Bulletin",
+  "weather.overrideActive": "Official source unreachable: value entered manually by the admin",
   "weather.source": "Source: Italian Civil Protection via allertameteo.app · Weather: Open-Meteo",
   "bathing.compliant": "Safe for swimming",
   "bathing.nonCompliant": "Not compliant",

@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import {
+  fetchAlertOverride,
   fetchBathingWater,
   fetchBikePath,
   fetchBikeSegments,
@@ -407,6 +408,34 @@ function Panel() {
   const advisories = useQuery({ queryKey: ["water-advisories"], queryFn: fetchWaterAdvisories });
   const bike = useQuery({ queryKey: ["bike-path"], queryFn: fetchBikePath });
   const segments = useQuery({ queryKey: ["bike-segments-admin"], queryFn: fetchBikeSegments });
+  const overrides = useQuery({ queryKey: ["allerta-override-admin"], queryFn: fetchAlertOverride });
+
+  async function saveOverride(
+    giorno: "oggi" | "domani",
+    attivo: boolean,
+    colore: string,
+    descrizione: string,
+    idraulico: string,
+    idrogeologico: string,
+    temporali: string,
+  ) {
+    const { error } = await supabase
+      .from("allerta_override")
+      .update({
+        attivo,
+        colore,
+        descrizione: descrizione || null,
+        idraulico: idraulico || null,
+        idrogeologico: idrogeologico || null,
+        temporali: temporali || null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("giorno", giorno);
+    if (error) return toast.error(error.message);
+    toast.success(t("admin.save"));
+    qc.invalidateQueries({ queryKey: ["allerta-override-admin"] });
+    qc.invalidateQueries({ queryKey: ["allerta-override"] });
+  }
 
   async function saveSegment(id: number, stato: string, nota: string) {
     const { error } = await supabase
@@ -604,6 +633,74 @@ function Panel() {
                 name="nota"
                 placeholder="Nota (facoltativa, es. motivo/durata della chiusura)"
                 defaultValue={s.nota ?? ""}
+                className={input}
+              />
+              <button className={btn}>{t("admin.save")}</button>
+            </form>
+          ))}
+        </div>
+      </section>
+
+      <section className={card}>
+        <h2 className="mb-1 text-xl font-bold">Allerta meteo — override manuale</h2>
+        <p className="mb-3 text-sm text-status-yellow">
+          ⚠ Da usare SOLO come ripiego se la fonte ufficiale (allertameteo.app) risulta
+          irraggiungibile. Finché la fonte ufficiale risponde, questo override viene sempre
+          ignorato automaticamente, anche se "Attivo" è spuntato — ricordati comunque di
+          disattivarlo appena il problema è risolto.
+        </p>
+        <div className="grid gap-4">
+          {(overrides.data ?? []).map((o) => (
+            <form
+              key={o.giorno}
+              className="grid gap-2 rounded-2xl border border-status-yellow/40 p-3"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const f = new FormData(e.currentTarget);
+                saveOverride(
+                  o.giorno,
+                  f.get("attivo") === "on",
+                  String(f.get("colore")),
+                  String(f.get("descrizione")),
+                  String(f.get("idraulico")),
+                  String(f.get("idrogeologico")),
+                  String(f.get("temporali")),
+                );
+              }}
+            >
+              <p className="text-sm font-semibold capitalize">{o.giorno}</p>
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" name="attivo" defaultChecked={o.attivo} />
+                Attivo (usa questo valore se la fonte ufficiale è giù)
+              </label>
+              <select name="colore" defaultValue={o.colore} className={input}>
+                <option value="verde">Verde — nessuna allerta</option>
+                <option value="giallo">Giallo — criticità ordinaria</option>
+                <option value="arancione">Arancione — criticità moderata</option>
+                <option value="rosso">Rosso — criticità elevata</option>
+              </select>
+              <input
+                name="descrizione"
+                placeholder="Descrizione generale"
+                defaultValue={o.descrizione ?? ""}
+                className={input}
+              />
+              <input
+                name="idraulico"
+                placeholder="Rischio idraulico"
+                defaultValue={o.idraulico ?? ""}
+                className={input}
+              />
+              <input
+                name="idrogeologico"
+                placeholder="Rischio idrogeologico"
+                defaultValue={o.idrogeologico ?? ""}
+                className={input}
+              />
+              <input
+                name="temporali"
+                placeholder="Temporali"
+                defaultValue={o.temporali ?? ""}
                 className={input}
               />
               <button className={btn}>{t("admin.save")}</button>
