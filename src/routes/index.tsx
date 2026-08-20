@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Lock } from "lucide-react";
+import { useEffect, useRef } from "react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { WeatherCard } from "@/components/cards/WeatherCard";
 import { BathingCard } from "@/components/cards/BathingCard";
@@ -33,6 +34,19 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const { t } = useI18n();
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el) return;
+    // Su Safari/iOS l'attributo HTML "muted" a volte non basta da solo:
+    // impostarlo anche come proprietà JS, e avviare il play esplicitamente,
+    // è il modo più affidabile per evitare che compaia l'icona di play
+    // nativa durante il breve istante prima che il video parta.
+    el.muted = true;
+    const p = el.play();
+    if (p) p.catch(() => {});
+  }, []);
 
   return (
     <div className="relative min-h-screen w-full max-w-full overflow-x-hidden bg-background">
@@ -42,6 +56,7 @@ function Index() {
         style={{ height: "100dvh" }}
       >
         <video
+          ref={videoRef}
           src={bgVideo.url}
           poster={bgPoster}
           autoPlay
