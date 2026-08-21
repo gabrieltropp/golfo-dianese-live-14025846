@@ -103,9 +103,12 @@ export function WeatherCard() {
 
   const overrideOggi = overrideQuery.data?.find((o) => o.giorno === "oggi" && o.attivo);
   const overrideDomani = overrideQuery.data?.find((o) => o.giorno === "domani" && o.attivo);
-  const usingOverride = alertQuery.isError && !!overrideOggi;
-  const oggi = alertQuery.data?.oggi ?? (overrideOggi ? overrideToDay(overrideOggi) : undefined);
-  const domani = alertQuery.data?.domani ?? (overrideDomani ? overrideToDay(overrideDomani) : undefined);
+  // L'override, quando è attivo, ha sempre la precedenza: è una scelta
+  // esplicita e manuale dell'amministratore, non un semplice ripiego
+  // legato alla disponibilità della fonte ufficiale.
+  const usingOverride = !!overrideOggi;
+  const oggi = overrideOggi ? overrideToDay(overrideOggi) : alertQuery.data?.oggi;
+  const domani = overrideDomani ? overrideToDay(overrideDomani) : alertQuery.data?.domani;
 
   const color = oggi?.allerta.colore;
   const tone: StatusTone = color ? TONE_BY_COLOR[color] : "grey";

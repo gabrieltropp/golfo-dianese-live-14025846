@@ -644,10 +644,11 @@ function Panel() {
       <section className={card}>
         <h2 className="mb-1 text-xl font-bold">Allerta meteo — override manuale</h2>
         <p className="mb-3 text-sm text-status-yellow">
-          ⚠ Da usare SOLO come ripiego se la fonte ufficiale (allertameteo.app) risulta
-          irraggiungibile. Finché la fonte ufficiale risponde, questo override viene sempre
-          ignorato automaticamente, anche se "Attivo" è spuntato — ricordati comunque di
-          disattivarlo appena il problema è risolto.
+          ⚠ Quando "Attivo" è spuntato, questo valore ha SEMPRE la precedenza sulla fonte
+          ufficiale (allertameteo.app), indipendentemente dal fatto che quest'ultima sia
+          raggiungibile o meno — è una scelta manuale tua, non un ripiego automatico.
+          Ricordati di disattivarlo quando non serve più, altrimenti il sito continuerà a
+          mostrare il tuo valore anche se la situazione ufficiale cambia.
         </p>
         <div className="grid gap-4">
           {(overrides.data ?? []).map((o) => (

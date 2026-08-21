@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Lock } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { InstallAppBanner } from "@/components/InstallAppBanner";
 import { WeatherCard } from "@/components/cards/WeatherCard";
 import { BathingCard } from "@/components/cards/BathingCard";
 import { WaterCard } from "@/components/cards/WaterCard";
@@ -46,6 +47,12 @@ function Index() {
     el.muted = true;
     const p = el.play();
     if (p) p.catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch(() => {});
+    }
   }, []);
 
   return (
@@ -155,9 +162,21 @@ function Index() {
           <Link to="/admin" className="inline-flex items-center gap-2 underline">
             <Lock className="size-4" /> {t("app.admin")}
           </Link>
+          <p className="mt-4 border-t border-border/40 pt-3 text-xs">
+            {t("footer.madeBy")}{" "}
+            <a
+              className="font-semibold underline"
+              href="https://gabrieletropianomultimedia.com"
+              target="_blank"
+              rel="noreferrer noopener"
+            >
+              Gabriele Tropiano
+            </a>
+          </p>
         </div>
       </footer>
       </div>
+      <InstallAppBanner />
     </div>
   );
 }
