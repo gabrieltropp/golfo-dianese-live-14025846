@@ -3,6 +3,7 @@ import { Lock } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { InstallAppBanner } from "@/components/InstallAppBanner";
+import { supabase } from "@/integrations/supabase/client";
 import { WeatherCard } from "@/components/cards/WeatherCard";
 import { BathingCard } from "@/components/cards/BathingCard";
 import { WaterCard } from "@/components/cards/WaterCard";
@@ -53,6 +54,18 @@ function Index() {
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/sw.js").catch(() => {});
     }
+  }, []);
+
+  useEffect(() => {
+    const standalone =
+      window.matchMedia?.("(display-mode: standalone)").matches ||
+      (navigator as unknown as { standalone?: boolean }).standalone === true;
+    if (!standalone) return;
+    // Una volta per sessione, per non gonfiare inutilmente il conteggio:
+    // è un indicatore anonimo di utilizzo, non un identificativo personale.
+    if (sessionStorage.getItem("standalone-logged")) return;
+    sessionStorage.setItem("standalone-logged", "1");
+    supabase.from("app_events").insert({ evento: "standalone_launch" }).then();
   }, []);
 
   return (

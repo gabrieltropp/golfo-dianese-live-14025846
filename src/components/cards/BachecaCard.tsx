@@ -53,10 +53,11 @@ function BachecaItem({
 /** Community board: verified reports only, newest verification first. */
 export function BachecaCard() {
   const { t } = useI18n();
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch, isRefetching } = useQuery({
     queryKey: ["segnalazioni"],
     queryFn: fetchSegnalazioniVerificate,
     staleTime: 5 * 60 * 1000,
+    retry: 2,
   });
 
   const items = [...(data ?? [])].sort(
@@ -83,6 +84,17 @@ export function BachecaCard() {
     >
       {isLoading ? (
         <p className="text-sm text-muted-foreground">{t("app.loading")}</p>
+      ) : isError ? (
+        <div className="glass-soft rounded-2xl p-4 text-sm">
+          <p className="mb-2 text-status-red">{t("app.error")}</p>
+          <button
+            onClick={() => refetch()}
+            disabled={isRefetching}
+            className="rounded-xl bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-60"
+          >
+            {isRefetching ? "…" : t("app.retry")}
+          </button>
+        </div>
       ) : items.length === 0 ? (
         <p className="glass-soft rounded-2xl p-4 text-sm text-muted-foreground">
           {t("bacheca.empty")}

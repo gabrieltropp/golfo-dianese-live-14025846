@@ -407,6 +407,16 @@ function Panel() {
   const bathing = useQuery({ queryKey: ["bathing-water"], queryFn: fetchBathingWater });
   const advisories = useQuery({ queryKey: ["water-advisories"], queryFn: fetchWaterAdvisories });
   const bike = useQuery({ queryKey: ["bike-path"], queryFn: fetchBikePath });
+  const appEvents = useQuery({
+    queryKey: ["app-events"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("app_events").select("evento");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  const androidInstalls = (appEvents.data ?? []).filter((e) => e.evento === "android_installed").length;
+  const standaloneLaunches = (appEvents.data ?? []).filter((e) => e.evento === "standalone_launch").length;
   const segments = useQuery({ queryKey: ["bike-segments-admin"], queryFn: fetchBikeSegments });
   const overrides = useQuery({ queryKey: ["allerta-override-admin"], queryFn: fetchAlertOverride });
 
@@ -449,6 +459,7 @@ function Panel() {
   }
 
   const [newAdvisory, setNewAdvisory] = useState({
+    comune: "Diano Marina",
     zone: "",
     kind: "planned",
     description: "",
@@ -468,6 +479,7 @@ function Panel() {
   async function addAdvisory() {
     if (!newAdvisory.zone) return toast.error("Zona obbligatoria");
     const { error } = await supabase.from("water_advisories").insert({
+      comune: newAdvisory.comune,
       zone: newAdvisory.zone,
       kind: newAdvisory.kind,
       description: newAdvisory.description || null,
@@ -476,7 +488,13 @@ function Panel() {
         : null,
     });
     if (error) return toast.error(error.message);
-    setNewAdvisory({ zone: "", kind: "planned", description: "", expected_restore_at: "" });
+    setNewAdvisory({
+      comune: "Diano Marina",
+      zone: "",
+      kind: "planned",
+      description: "",
+      expected_restore_at: "",
+    });
     toast.success("OK");
     qc.invalidateQueries({ queryKey: ["water-advisories"] });
   }
@@ -504,6 +522,26 @@ function Panel() {
   return (
     <div className="grid gap-5">
       <UpdateStatusPanel locale={lang} />
+      <section className={card}>
+        <h2 className="mb-3 text-xl font-bold">Installazioni app</h2>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-2xl bg-secondary/60 p-4 text-center">
+            <p className="text-3xl font-black">{androidInstalls}</p>
+            <p className="text-xs text-muted-foreground">Installazioni Android</p>
+          </div>
+          <div className="rounded-2xl bg-secondary/60 p-4 text-center">
+            <p className="text-3xl font-black">{standaloneLaunches}</p>
+            <p className="text-xs text-muted-foreground">
+              Aperture da shortcut (iPhone + Android)
+            </p>
+          </div>
+        </div>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Su iPhone non è possibile sapere il momento esatto dell'installazione (limite di
+          Apple): il secondo numero conta invece quante volte l'app viene aperta già
+          installata, un indicatore indiretto ma utile dell'uso reale.
+        </p>
+      </section>
       <ReportsQueue locale={lang} />
       <section className={card}>
         <h2 className="mb-3 text-xl font-bold">{t("card.bathing")}</h2>
@@ -537,6 +575,15 @@ function Panel() {
       <section className={card}>
         <h2 className="mb-3 text-xl font-bold">{t("card.water")}</h2>
         <div className="mb-4 grid gap-2 sm:grid-cols-2">
+          <select
+            value={newAdvisory.comune}
+            onChange={(e) => setNewAdvisory({ ...newAdvisory, comune: e.target.value })}
+            className={input}
+          >
+            <option value="Diano Marina">Diano Marina</option>
+            <option value="San Bartolomeo al Mare">San Bartolomeo al Mare</option>
+            <option value="Cervo">Cervo</option>
+          </select>
           <input
             placeholder={t("water.zone")}
             value={newAdvisory.zone}
@@ -572,7 +619,7 @@ function Panel() {
           {(advisories.data ?? []).map((a) => (
             <li key={a.id} className="flex items-center justify-between gap-3 rounded-2xl bg-secondary/60 p-3">
               <span className="text-sm">
-                <strong>{a.zone}</strong> · {t(`water.kind.${a.kind}`)}
+                <strong>{a.comune}</strong> · {a.zone} · {t(`water.kind.${a.kind}`)}
               </span>
               <button onClick={() => removeAdvisory(a.id)} className="text-sm font-semibold text-destructive">
                 {t("admin.delete")}

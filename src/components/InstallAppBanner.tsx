@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Download, Share, X, SquarePlus } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+import { supabase } from "@/integrations/supabase/client";
 
 const DISMISS_KEY = "install-banner-dismissed";
 
@@ -42,7 +43,18 @@ export function InstallAppBanner() {
       setVisible(true);
     };
     window.addEventListener("beforeinstallprompt", onPrompt);
-    return () => window.removeEventListener("beforeinstallprompt", onPrompt);
+
+    // Evento reale, indipendente da come l'installazione è avvenuta
+    // (pulsante nostro o icona nativa del browser): conteggio anonimo.
+    const onInstalled = () => {
+      supabase.from("app_events").insert({ evento: "android_installed" }).then();
+    };
+    window.addEventListener("appinstalled", onInstalled);
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", onPrompt);
+      window.removeEventListener("appinstalled", onInstalled);
+    };
   }, []);
 
   if (!visible) return null;
