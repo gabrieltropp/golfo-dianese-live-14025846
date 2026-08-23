@@ -162,21 +162,17 @@
   --font-sans: "Inter Tight", ui-sans-serif, system-ui, sans-serif;
 }
 
-/* ---- Animazione d'ingresso delle card (solo transform + opacity ---- */
+/* ---- Animazione d'ingresso delle card (solo transform + opacity) ---- */
 .reveal {
   will-change: transform, opacity;
 }
- 
+
 .reveal.is-in {
   opacity: 1;
-  transform: translate3d(0, 0, 0) rotate(0deg);
+  transform: translateY(0) rotate(0deg);
   transition:
     transform 250ms ease-out,
     opacity 250ms ease-out;
-  /* Una volta raggiunto lo stato finale, non serve più il suggerimento
-     will-change: lasciarlo attivo indefinitamente può causare glitch di
-     compositing su Safari/iOS, specie con lo sfondo video fisso sotto. */
-  will-change: auto;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -198,6 +194,43 @@
   }
   .reveal.is-in:hover {
     transform: none;
+  }
+}
+
+/* ---- Messaggio di benvenuto: entrata + leggero fluttuare continuo delle lettere ---- */
+@keyframes welcome-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) rotate(4deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg);
+  }
+}
+
+@keyframes welcome-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+.welcome-letter {
+  display: inline-block;
+  animation:
+    welcome-in 550ms cubic-bezier(0.22, 1, 0.36, 1) both,
+    welcome-float 3.6s ease-in-out infinite;
+  animation-delay: var(--in-delay, 0ms), var(--float-delay, 0ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .welcome-letter {
+    animation: welcome-in 350ms ease-out both;
+    animation-delay: var(--in-delay, 0ms);
   }
 }
 

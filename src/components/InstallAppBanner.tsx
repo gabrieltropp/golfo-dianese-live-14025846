@@ -21,11 +21,19 @@ type BeforeInstallPromptEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
-export function InstallAppBanner() {
+export function InstallAppBanner({
+  onVisibleChange,
+}: {
+  onVisibleChange?: (visible: boolean) => void;
+}) {
   const { t } = useI18n();
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showIosHint, setShowIosHint] = useState(false);
   const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    onVisibleChange?.(visible);
+  }, [visible, onVisibleChange]);
 
   useEffect(() => {
     if (isStandalone() || localStorage.getItem(DISMISS_KEY) === "1") return;

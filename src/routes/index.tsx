@@ -1,8 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Lock } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { InstallAppBanner } from "@/components/InstallAppBanner";
+import { ShareBanner } from "@/components/ShareBanner";
+import { WelcomeMessage } from "@/components/WelcomeMessage";
 import { supabase } from "@/integrations/supabase/client";
 import { WeatherCard } from "@/components/cards/WeatherCard";
 import { BathingCard } from "@/components/cards/BathingCard";
@@ -37,6 +39,7 @@ export const Route = createFileRoute("/")({
 function Index() {
   const { t } = useI18n();
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [installVisible, setInstallVisible] = useState(false);
 
   useEffect(() => {
     const el = videoRef.current;
@@ -122,6 +125,8 @@ function Index() {
         </div>
       </header>
 
+      <WelcomeMessage />
+
       <main className="mx-auto w-full max-w-4xl flex-1 px-4 pb-16 pt-16 md:pt-24">
         <div className="grid gap-8 md:grid-cols-2 md:items-start">
           <Reveal index={0}>
@@ -189,7 +194,8 @@ function Index() {
         </div>
       </footer>
       </div>
-      <InstallAppBanner />
+      <InstallAppBanner onVisibleChange={setInstallVisible} />
+      <ShareBanner installBannerVisible={installVisible} />
     </div>
   );
 }
