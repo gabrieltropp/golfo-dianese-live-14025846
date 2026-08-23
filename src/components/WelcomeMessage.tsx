@@ -47,7 +47,7 @@ export function WelcomeMessage() {
 
   return (
     <div className="mx-auto mt-6 w-full max-w-4xl px-4 sm:mt-10">
-      <div className="glass rounded-3xl px-6 py-6 text-center sm:px-10 sm:py-8">
+      <div className="glass rounded-3xl px-6 py-6 text-left sm:px-10 sm:py-8">
         <h2
           aria-label={text}
           className="font-display w-full text-[clamp(2rem,11vw,4.5rem)] leading-[1.05] text-header-fg"
