@@ -2,16 +2,14 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * Card che entra in scena "fluttuante e obliqua" e si raddrizza in modo
- * legato allo scroll (serve ~una schermata intera per completare).
- * Anima solo transform/opacity e, una volta dritta, non torna mai obliqua.
+ * Card che entra in scena con una leggera salita (traslazione verticale) e
+ * dissolvenza, legata allo scroll (serve ~una schermata intera per
+ * completare). Nessuna rotazione: solo transform (translate) e opacity.
  *
- * Fix: il calcolo legato allo scroll ora si attiva solo mentre la card è
- * realmente vicina al viewport (via IntersectionObserver), invece di tenere
- * un listener di scroll globale sempre attivo per ogni card della pagina.
- * Questo evita che più card insieme saturino il thread principale su mobile
- * proprio nel momento della transizione, che è la causa più probabile per
- * cui la card non si stabilizzava correttamente nello stato finale.
+ * Il calcolo legato allo scroll si attiva solo mentre la card è realmente
+ * vicina al viewport (via IntersectionObserver), invece di tenere un
+ * listener di scroll globale sempre attivo per ogni card della pagina —
+ * evita che più card insieme saturino il thread principale su mobile.
  */
 export function Reveal({
   index = 0,
@@ -94,7 +92,6 @@ export function Reveal({
     };
   }, []);
 
-  const rot = index % 2 === 0 ? 9 : -10;
   const p = done ? 1 : progress;
   const eased = 1 - Math.pow(1 - p, 3);
 
@@ -106,7 +103,7 @@ export function Reveal({
         done
           ? undefined
           : ({
-              transform: `translate3d(0, ${(1 - eased) * 70}px, 0) rotate(${(1 - eased) * rot}deg)`,
+              transform: `translate3d(0, ${(1 - eased) * 70}px, 0)`,
               opacity: 0.35 + eased * 0.65,
             } as React.CSSProperties)
       }

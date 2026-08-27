@@ -169,7 +169,7 @@
 
 .reveal.is-in {
   opacity: 1;
-  transform: translateY(0) rotate(0deg);
+  transform: translateY(0);
   transition:
     transform 250ms ease-out,
     opacity 250ms ease-out;
@@ -177,7 +177,7 @@
 
 @media (hover: hover) and (pointer: fine) {
   .reveal.is-in:hover {
-    transform: translateY(-4px) rotate(-0.6deg);
+    transform: translateY(-4px);
     transition-duration: 250ms;
     transition-delay: 0ms;
   }
