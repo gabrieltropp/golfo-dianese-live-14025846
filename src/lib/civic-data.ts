@@ -75,22 +75,52 @@ export function overrideToDay(o: AlertOverride): AlertDay {
 export type WeatherNow = {
   temperature: number;
   wind: number;
+  humidity: number;
   code: number;
   maxToday: number;
   minToday: number;
 };
 
 export async function fetchWeather(lat: number, lon: number): Promise<WeatherNow> {
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,wind_speed_10m,weather_code&daily=temperature_2m_max,temperature_2m_min&timezone=Europe%2FRome&forecast_days=1`;
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,wind_speed_10m,weather_code,relative_humidity_2m&daily=temperature_2m_max,temperature_2m_min&timezone=Europe%2FRome&forecast_days=1`;
   const res = await fetch(url);
   if (!res.ok) throw new Error("weather fetch failed");
   const j = await res.json();
   return {
     temperature: Math.round(j.current.temperature_2m),
     wind: Math.round(j.current.wind_speed_10m),
+    humidity: Math.round(j.current.relative_humidity_2m),
     code: j.current.weather_code,
     maxToday: Math.round(j.daily.temperature_2m_max[0]),
     minToday: Math.round(j.daily.temperature_2m_min[0]),
+  };
+}
+
+export type MarineNow = {
+  waveHeight: number | null;
+  wavePeriod: number | null;
+  waveDirection: number | null;
+};
+
+// Un solo punto di riferimento al largo del golfo: le condizioni del mare
+// non cambiano in modo apprezzabile tra Diano Marina, San Bartolomeo al
+// Mare e Cervo (pochi km di costa), quindi non serve legarle al comune
+// selezionato nel meteo.
+const GOLFO_MARINE_POINT = { lat: 43.895, lon: 8.11 };
+
+export async function fetchMarine(): Promise<MarineNow> {
+  const { lat, lon } = GOLFO_MARINE_POINT;
+  const url = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lon}&current=wave_height,wave_period,wave_direction&timezone=Europe%2FRome`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("marine fetch failed");
+  const j = await res.json();
+  const waveHeight = j.current?.wave_height;
+  const wavePeriod = j.current?.wave_period;
+  const waveDirection = j.current?.wave_direction;
+  return {
+    waveHeight: typeof waveHeight === "number" ? waveHeight : null,
+    wavePeriod: typeof wavePeriod === "number" ? wavePeriod : null,
+    waveDirection: typeof waveDirection === "number" ? waveDirection : null,
   };
 }
 

@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import {
+  COMUNI,
   fetchAlertOverride,
   fetchBathingWater,
   fetchBikePath,
@@ -580,9 +581,11 @@ function Panel() {
             onChange={(e) => setNewAdvisory({ ...newAdvisory, comune: e.target.value })}
             className={input}
           >
-            <option value="Diano Marina">Diano Marina</option>
-            <option value="San Bartolomeo al Mare">San Bartolomeo al Mare</option>
-            <option value="Cervo">Cervo</option>
+            {COMUNI.filter((c) => c.slug !== "imperia").map((c) => (
+              <option key={c.slug} value={c.name}>
+                {c.name}
+              </option>
+            ))}
           </select>
           <input
             placeholder={t("water.zone")}

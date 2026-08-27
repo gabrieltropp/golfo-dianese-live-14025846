@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { CloudSun, Droplets, Mountain, Zap } from "lucide-react";
+import { Anchor, CloudSun, Droplets, Mountain, Waves, Wind, Zap } from "lucide-react";
 import { StatusCard, DetailRow, type StatusTone } from "@/components/StatusCard";
 import { useI18n } from "@/lib/i18n";
 import {
   COMUNI,
   fetchAlert,
   fetchAlertOverride,
+  fetchMarine,
   fetchWeather,
   overrideToDay,
   weatherDescription,
@@ -100,6 +101,12 @@ export function WeatherCard() {
     queryFn: () => fetchWeather(comune.lat, comune.lon),
     staleTime: 15 * 60 * 1000,
   });
+  const marineQuery = useQuery({
+    queryKey: ["marine"],
+    queryFn: fetchMarine,
+    staleTime: 15 * 60 * 1000,
+    retry: 1,
+  });
 
   const overrideOggi = overrideQuery.data?.find((o) => o.giorno === "oggi" && o.attivo);
   const overrideDomani = overrideQuery.data?.find((o) => o.giorno === "domani" && o.attivo);
@@ -159,15 +166,54 @@ export function WeatherCard() {
             </p>
             <p className="text-2xl font-bold">{conditions}</p>
           </div>
-          <div className="mb-4 flex gap-3">
-          <div className="glass-soft flex-1 rounded-2xl p-4">
-            <p className="text-sm font-semibold text-muted-foreground">{t("weather.temp")}</p>
-            <p className="text-3xl font-bold">{weatherQuery.data.temperature}°C</p>
+          <div className="mb-4 grid grid-cols-3 gap-3">
+            <div className="glass-soft rounded-2xl p-4">
+              <p className="text-sm font-semibold text-muted-foreground">{t("weather.temp")}</p>
+              <p className="text-3xl font-bold">{weatherQuery.data.temperature}°C</p>
+            </div>
+            <div className="glass-soft rounded-2xl p-4">
+              <p className="flex items-center gap-1 text-sm font-semibold text-muted-foreground">
+                <Wind className="size-4" /> {t("weather.wind")}
+              </p>
+              <p className="text-3xl font-bold">{weatherQuery.data.wind} km/h</p>
+            </div>
+            <div className="glass-soft rounded-2xl p-4">
+              <p className="flex items-center gap-1 text-sm font-semibold text-muted-foreground">
+                <Droplets className="size-4" /> {t("weather.humidity")}
+              </p>
+              <p className="text-3xl font-bold">{weatherQuery.data.humidity}%</p>
+            </div>
           </div>
-          <div className="glass-soft flex-1 rounded-2xl p-4">
-            <p className="text-sm font-semibold text-muted-foreground">{t("weather.wind")}</p>
-            <p className="text-3xl font-bold">{weatherQuery.data.wind} km/h</p>
-          </div>
+
+          <div className="glass-soft mb-4 rounded-2xl p-4">
+            <p className="mb-2 flex items-center gap-1 text-sm font-bold text-foreground">
+              <Anchor className="size-4" /> {t("weather.sailors")}
+            </p>
+            {marineQuery.data && marineQuery.data.waveHeight !== null ? (
+              <>
+                <div className="flex gap-3">
+                  <div className="flex-1">
+                    <p className="flex items-center gap-1 text-xs font-semibold text-muted-foreground">
+                      <Waves className="size-4" /> {t("weather.waveHeight")}
+                    </p>
+                    <p className="text-2xl font-bold">{marineQuery.data.waveHeight} m</p>
+                  </div>
+                  {marineQuery.data.wavePeriod !== null ? (
+                    <div className="flex-1">
+                      <p className="text-xs font-semibold text-muted-foreground">
+                        {t("weather.wavePeriod")}
+                      </p>
+                      <p className="text-2xl font-bold">{marineQuery.data.wavePeriod} s</p>
+                    </div>
+                  ) : null}
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">{t("weather.waveNote")}</p>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                {marineQuery.isLoading ? t("app.loading") : t("weather.waveUnavailable")}
+              </p>
+            )}
           </div>
         </>
       ) : null}
