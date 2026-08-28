@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Anchor, CloudSun, Droplets, Mountain, Waves, Wind, Zap } from "lucide-react";
+import { Anchor, CloudSun, Droplets, Mountain, Thermometer, Waves, Wind, Zap } from "lucide-react";
 import { StatusCard, DetailRow, type StatusTone } from "@/components/StatusCard";
 import { useI18n } from "@/lib/i18n";
 import {
   COMUNI,
+  degreesToCompass,
   fetchAlert,
   fetchAlertOverride,
   fetchMarine,
@@ -166,16 +167,10 @@ export function WeatherCard() {
             </p>
             <p className="text-2xl font-bold">{conditions}</p>
           </div>
-          <div className="mb-4 grid grid-cols-3 gap-3">
+          <div className="mb-4 grid grid-cols-2 gap-3">
             <div className="glass-soft rounded-2xl p-4">
               <p className="text-sm font-semibold text-muted-foreground">{t("weather.temp")}</p>
               <p className="text-3xl font-bold">{weatherQuery.data.temperature}°C</p>
-            </div>
-            <div className="glass-soft rounded-2xl p-4">
-              <p className="flex items-center gap-1 text-sm font-semibold text-muted-foreground">
-                <Wind className="size-4" /> {t("weather.wind")}
-              </p>
-              <p className="text-3xl font-bold">{weatherQuery.data.wind} km/h</p>
             </div>
             <div className="glass-soft rounded-2xl p-4">
               <p className="flex items-center gap-1 text-sm font-semibold text-muted-foreground">
@@ -189,31 +184,56 @@ export function WeatherCard() {
             <p className="mb-2 flex items-center gap-1 text-sm font-bold text-foreground">
               <Anchor className="size-4" /> {t("weather.sailors")}
             </p>
-            {marineQuery.data && marineQuery.data.waveHeight !== null ? (
-              <>
-                <div className="flex gap-3">
-                  <div className="flex-1">
-                    <p className="flex items-center gap-1 text-xs font-semibold text-muted-foreground">
-                      <Waves className="size-4" /> {t("weather.waveHeight")}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <p className="flex items-center gap-1 text-xs font-semibold text-muted-foreground">
+                  <Wind className="size-4" /> {t("weather.wind")}
+                </p>
+                <p className="text-2xl font-bold">{weatherQuery.data.wind} km/h</p>
+                <p className="text-xs text-muted-foreground">
+                  {t("weather.windFrom")} {degreesToCompass(weatherQuery.data.windDirection)}
+                </p>
+              </div>
+              {marineQuery.data && marineQuery.data.waveHeight !== null ? (
+                <div>
+                  <p className="flex items-center gap-1 text-xs font-semibold text-muted-foreground">
+                    <Waves className="size-4" /> {t("weather.waveHeight")}
+                  </p>
+                  <p className="text-2xl font-bold">{marineQuery.data.waveHeight} m</p>
+                  {marineQuery.data.waveDirection !== null ? (
+                    <p className="text-xs text-muted-foreground">
+                      {t("weather.wavesFrom")} {degreesToCompass(marineQuery.data.waveDirection)}
                     </p>
-                    <p className="text-2xl font-bold">{marineQuery.data.waveHeight} m</p>
-                  </div>
-                  {marineQuery.data.wavePeriod !== null ? (
-                    <div className="flex-1">
-                      <p className="text-xs font-semibold text-muted-foreground">
-                        {t("weather.wavePeriod")}
-                      </p>
-                      <p className="text-2xl font-bold">{marineQuery.data.wavePeriod} s</p>
-                    </div>
                   ) : null}
                 </div>
-                <p className="mt-2 text-xs text-muted-foreground">{t("weather.waveNote")}</p>
-              </>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                {marineQuery.isLoading ? t("app.loading") : t("weather.waveUnavailable")}
-              </p>
-            )}
+              ) : (
+                <div>
+                  <p className="flex items-center gap-1 text-xs font-semibold text-muted-foreground">
+                    <Waves className="size-4" /> {t("weather.waveHeight")}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {marineQuery.isLoading ? t("app.loading") : t("weather.waveUnavailable")}
+                  </p>
+                </div>
+              )}
+              {marineQuery.data?.wavePeriod !== null && marineQuery.data?.wavePeriod !== undefined ? (
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground">
+                    {t("weather.wavePeriod")}
+                  </p>
+                  <p className="text-2xl font-bold">{marineQuery.data.wavePeriod} s</p>
+                </div>
+              ) : null}
+              {marineQuery.data?.seaTemperature !== null && marineQuery.data?.seaTemperature !== undefined ? (
+                <div>
+                  <p className="flex items-center gap-1 text-xs font-semibold text-muted-foreground">
+                    <Thermometer className="size-4" /> {t("weather.seaTemp")}
+                  </p>
+                  <p className="text-2xl font-bold">{marineQuery.data.seaTemperature}°C</p>
+                </div>
+              ) : null}
+            </div>
+            <p className="mt-3 text-xs text-muted-foreground">{t("weather.waveNote")}</p>
           </div>
         </>
       ) : null}

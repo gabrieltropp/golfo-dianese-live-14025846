@@ -75,6 +75,7 @@ export function overrideToDay(o: AlertOverride): AlertDay {
 export type WeatherNow = {
   temperature: number;
   wind: number;
+  windDirection: number;
   humidity: number;
   code: number;
   maxToday: number;
@@ -82,13 +83,14 @@ export type WeatherNow = {
 };
 
 export async function fetchWeather(lat: number, lon: number): Promise<WeatherNow> {
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,wind_speed_10m,weather_code,relative_humidity_2m&daily=temperature_2m_max,temperature_2m_min&timezone=Europe%2FRome&forecast_days=1`;
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,wind_speed_10m,wind_direction_10m,weather_code,relative_humidity_2m&daily=temperature_2m_max,temperature_2m_min&timezone=Europe%2FRome&forecast_days=1`;
   const res = await fetch(url);
   if (!res.ok) throw new Error("weather fetch failed");
   const j = await res.json();
   return {
     temperature: Math.round(j.current.temperature_2m),
     wind: Math.round(j.current.wind_speed_10m),
+    windDirection: Math.round(j.current.wind_direction_10m),
     humidity: Math.round(j.current.relative_humidity_2m),
     code: j.current.weather_code,
     maxToday: Math.round(j.daily.temperature_2m_max[0]),
@@ -100,6 +102,7 @@ export type MarineNow = {
   waveHeight: number | null;
   wavePeriod: number | null;
   waveDirection: number | null;
+  seaTemperature: number | null;
 };
 
 // Un solo punto di riferimento al largo del golfo: le condizioni del mare
@@ -110,18 +113,27 @@ const GOLFO_MARINE_POINT = { lat: 43.895, lon: 8.11 };
 
 export async function fetchMarine(): Promise<MarineNow> {
   const { lat, lon } = GOLFO_MARINE_POINT;
-  const url = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lon}&current=wave_height,wave_period,wave_direction&timezone=Europe%2FRome`;
+  const url = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lon}&current=wave_height,wave_period,wave_direction,sea_surface_temperature&timezone=Europe%2FRome`;
   const res = await fetch(url);
   if (!res.ok) throw new Error("marine fetch failed");
   const j = await res.json();
   const waveHeight = j.current?.wave_height;
   const wavePeriod = j.current?.wave_period;
   const waveDirection = j.current?.wave_direction;
+  const seaTemperature = j.current?.sea_surface_temperature;
   return {
     waveHeight: typeof waveHeight === "number" ? waveHeight : null,
     wavePeriod: typeof wavePeriod === "number" ? wavePeriod : null,
     waveDirection: typeof waveDirection === "number" ? waveDirection : null,
+    seaTemperature: typeof seaTemperature === "number" ? Math.round(seaTemperature * 10) / 10 : null,
   };
+}
+
+// Converte un angolo (0-360°) nel punto cardinale/intercardinale più vicino,
+// nella forma abbreviata usata comunemente per vento e mare (es. "NO", "SE").
+export function degreesToCompass(deg: number): string {
+  const dirs = ["N", "NE", "E", "SE", "S", "SO", "O", "NO"];
+  return dirs[Math.round(deg / 45) % 8];
 }
 
 export type BathingWater = {
