@@ -165,7 +165,8 @@ function RefreshSourcesButton() {
       jobs.map(async (job) => {
         const { data, error } = await supabase.rpc(job.fn);
         if (error) throw new Error(error.message);
-        if (data?.ok === false) throw new Error(data?.error || `${job.label}: errore`);
+        const result = data as { ok?: boolean; error?: string } | null;
+        if (result?.ok === false) throw new Error(result?.error || `${job.label}: errore`);
         return job.label;
       }),
     );

@@ -13,8 +13,6 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiPublicSegnalaRouteImport } from './routes/api/public/segnala'
-import { Route as ApiPublicHooksRefreshBalneazioneRouteImport } from './routes/api/public/hooks/refresh-balneazione'
-import { Route as ApiPublicHooksRefreshAvvisiRouteImport } from './routes/api/public/hooks/refresh-avvisi'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -36,34 +34,18 @@ const ApiPublicSegnalaRoute = ApiPublicSegnalaRouteImport.update({
   path: '/api/public/segnala',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicHooksRefreshBalneazioneRoute =
-  ApiPublicHooksRefreshBalneazioneRouteImport.update({
-    id: '/api/public/hooks/refresh-balneazione',
-    path: '/api/public/hooks/refresh-balneazione',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksRefreshAvvisiRoute =
-  ApiPublicHooksRefreshAvvisiRouteImport.update({
-    id: '/api/public/hooks/refresh-avvisi',
-    path: '/api/public/hooks/refresh-avvisi',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/public/segnala': typeof ApiPublicSegnalaRoute
-  '/api/public/hooks/refresh-avvisi': typeof ApiPublicHooksRefreshAvvisiRoute
-  '/api/public/hooks/refresh-balneazione': typeof ApiPublicHooksRefreshBalneazioneRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/public/segnala': typeof ApiPublicSegnalaRoute
-  '/api/public/hooks/refresh-avvisi': typeof ApiPublicHooksRefreshAvvisiRoute
-  '/api/public/hooks/refresh-balneazione': typeof ApiPublicHooksRefreshBalneazioneRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -71,34 +53,13 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/public/segnala': typeof ApiPublicSegnalaRoute
-  '/api/public/hooks/refresh-avvisi': typeof ApiPublicHooksRefreshAvvisiRoute
-  '/api/public/hooks/refresh-balneazione': typeof ApiPublicHooksRefreshBalneazioneRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/admin'
-    | '/sitemap.xml'
-    | '/api/public/segnala'
-    | '/api/public/hooks/refresh-avvisi'
-    | '/api/public/hooks/refresh-balneazione'
+  fullPaths: '/' | '/admin' | '/sitemap.xml' | '/api/public/segnala'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/admin'
-    | '/sitemap.xml'
-    | '/api/public/segnala'
-    | '/api/public/hooks/refresh-avvisi'
-    | '/api/public/hooks/refresh-balneazione'
-  id:
-    | '__root__'
-    | '/'
-    | '/admin'
-    | '/sitemap.xml'
-    | '/api/public/segnala'
-    | '/api/public/hooks/refresh-avvisi'
-    | '/api/public/hooks/refresh-balneazione'
+  to: '/' | '/admin' | '/sitemap.xml' | '/api/public/segnala'
+  id: '__root__' | '/' | '/admin' | '/sitemap.xml' | '/api/public/segnala'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -106,8 +67,6 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiPublicSegnalaRoute: typeof ApiPublicSegnalaRoute
-  ApiPublicHooksRefreshAvvisiRoute: typeof ApiPublicHooksRefreshAvvisiRoute
-  ApiPublicHooksRefreshBalneazioneRoute: typeof ApiPublicHooksRefreshBalneazioneRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -140,20 +99,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSegnalaRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/hooks/refresh-balneazione': {
-      id: '/api/public/hooks/refresh-balneazione'
-      path: '/api/public/hooks/refresh-balneazione'
-      fullPath: '/api/public/hooks/refresh-balneazione'
-      preLoaderRoute: typeof ApiPublicHooksRefreshBalneazioneRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/refresh-avvisi': {
-      id: '/api/public/hooks/refresh-avvisi'
-      path: '/api/public/hooks/refresh-avvisi'
-      fullPath: '/api/public/hooks/refresh-avvisi'
-      preLoaderRoute: typeof ApiPublicHooksRefreshAvvisiRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -162,9 +107,17 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiPublicSegnalaRoute: ApiPublicSegnalaRoute,
-  ApiPublicHooksRefreshAvvisiRoute: ApiPublicHooksRefreshAvvisiRoute,
-  ApiPublicHooksRefreshBalneazioneRoute: ApiPublicHooksRefreshBalneazioneRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
