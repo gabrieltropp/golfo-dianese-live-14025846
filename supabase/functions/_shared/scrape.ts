@@ -166,7 +166,7 @@ export async function scrapeSanBartolomeo(now: string): Promise<AvvisoRow[]> {
   return rows;
 }
 
-/** Comune di Cervo — legacy CMS, news list at /home/novita.html. */
+/** Comune di Cervo — CMS "Kibernetes/PA Digitale", news list at /home/novita.html. */
 export async function scrapeCervo(now: string): Promise<AvvisoRow[]> {
   const base = "https://www.comune.cervo.im.it";
   const html = await getText(base + "/home/novita.html");
@@ -182,7 +182,14 @@ export async function scrapeCervo(now: string): Promise<AvvisoRow[]> {
     if (seen.has(url)) return;
     seen.add(url);
     const card = a.closest(".card-body");
-    const data = parseItalianDate(card.find("span.data").first().text());
+    // Il testo del blocco "categoria + data" (es. "AVVISO — 03 AGOSTO 2026")
+    // non vive più in uno <span class="data"> isolato: prendiamo il testo
+    // intero di .category-top e ne estraiamo sia la data (parseItalianDate
+    // cerca il pattern ovunque nella stringa) sia la categoria (la parola
+    // prima del trattino/em-dash).
+    const categoryTopText = clean(card.find(".category-top").first().text());
+    const data = parseItalianDate(categoryTopText);
+    const categoriaMatch = categoryTopText.match(/^([a-zàèéìòù\s]+?)\s*[—-]/i);
     rows.push({
       fonte: "Comune di Cervo",
       comune: "Cervo",
@@ -191,7 +198,7 @@ export async function scrapeCervo(now: string): Promise<AvvisoRow[]> {
       url,
       data_pubblicazione: data,
       necessita_revisione: data === null,
-      categoria: clean(card.find(".category-top span").first().text()) || "Notizia",
+      categoria: (categoriaMatch ? clean(categoriaMatch[1]) : "") || "Notizia",
       fetched_at: now,
     });
   });
