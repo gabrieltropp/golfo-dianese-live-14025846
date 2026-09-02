@@ -27,10 +27,21 @@ const HTML_HEADERS = {
   "Accept-Language": "it-IT,it;q=0.9,en;q=0.8",
 };
 
-async function getText(url: string): Promise<string> {
-  const res = await fetch(url, { headers: HTML_HEADERS });
-  if (!res.ok) throw new Error(`${url} -> HTTP ${res.status}`);
-  return await res.text();
+async function getText(url: string, timeoutMs = 15_000): Promise<string> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { headers: HTML_HEADERS, signal: controller.signal });
+    if (!res.ok) throw new Error(`${url} -> HTTP ${res.status}`);
+    return await res.text();
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new Error(`${url} -> timeout dopo ${timeoutMs} ms`);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 async function getJson<T>(url: string): Promise<T> {
@@ -166,10 +177,7 @@ export async function scrapeSanBartolomeo(now: string): Promise<AvvisoRow[]> {
   return rows;
 }
 
-/** Comune di Cervo — CMS "Kibernetes/PA Digitale", news list at /home/novita.html. */
-export async function scrapeCervo(now: string): Promise<AvvisoRow[]> {
-  const base = "https://www.comune.cervo.im.it";
-  const html = await getText(base + "/home/novita.html");
+function parseCervoHtml(html: string, now: string, base: string): AvvisoRow[] {
   const $ = cheerio.load(html);
   const rows: AvvisoRow[] = [];
   const seen = new Set<string>();
@@ -202,8 +210,60 @@ export async function scrapeCervo(now: string): Promise<AvvisoRow[]> {
       fetched_at: now,
     });
   });
-  if (rows.length === 0) throw new Error("Cervo: nessun elemento trovato (markup cambiato?)");
   return rows;
+}
+
+function parseCervoMarkdown(markdown: string, now: string): AvvisoRow[] {
+  const rows: AvvisoRow[] = [];
+  const pattern = /(?:^|\n)(Avviso|Notizia|Comunicazione)\s+(\d{1,2}\s+[a-zàèéìòù]+\s+\d{4})[^\n]*\n+\s*###\s+\[([^\]]+)\]\((https?:\/\/www\.comune\.cervo\.im\.it\/notizie\/[^)]+)\)\s*\n+\s*([^\n\[]*)/gim;
+  const seen = new Set<string>();
+  for (const match of markdown.matchAll(pattern)) {
+    const categoria = clean(match[1]);
+    const data = parseItalianDate(match[2]);
+    const titolo = clean(match[3]);
+    const url = clean(match[4]);
+    if (!titolo || !url || seen.has(url)) continue;
+    seen.add(url);
+    rows.push({
+      fonte: "Comune di Cervo",
+      comune: "Cervo",
+      titolo,
+      testo_breve: clean(match[5]) || null,
+      url,
+      data_pubblicazione: data,
+      necessita_revisione: data === null,
+      categoria: categoria || "Notizia",
+      fetched_at: now,
+    });
+  }
+  return rows;
+}
+
+/** Comune di Cervo — sito ufficiale, con proxy testuale di sola lettura come fallback di rete. */
+export async function scrapeCervo(now: string): Promise<AvvisoRow[]> {
+  const base = "https://www.comune.cervo.im.it";
+  const officialUrl = base + "/home/novita.html";
+  const errors: string[] = [];
+
+  try {
+    const html = await getText(officialUrl, 12_000);
+    const rows = parseCervoHtml(html, now, base);
+    if (rows.length > 0) return rows;
+    errors.push("sito ufficiale: nessun elemento trovato");
+  } catch (error) {
+    errors.push(`sito ufficiale: ${error instanceof Error ? error.message : String(error)}`);
+  }
+
+  try {
+    const markdown = await getText(`https://r.jina.ai/${officialUrl}`, 20_000);
+    const rows = parseCervoMarkdown(markdown, now);
+    if (rows.length > 0) return rows;
+    errors.push("fallback testuale: nessun elemento trovato");
+  } catch (error) {
+    errors.push(`fallback testuale: ${error instanceof Error ? error.message : String(error)}`);
+  }
+
+  throw new Error(`Cervo: ${errors.join("; ")}`);
 }
 
 const COMUNI_PATTERNS: Array<{ comune: string; pattern: RegExp }> = [
