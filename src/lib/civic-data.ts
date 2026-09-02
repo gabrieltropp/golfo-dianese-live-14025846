@@ -72,6 +72,29 @@ export function overrideToDay(o: AlertOverride): AlertDay {
   };
 }
 
+export type BandieraRossa = {
+  attivo: boolean;
+  aggiornata_il: string;
+  note: string | null;
+};
+
+/**
+ * Segnalazione NON ufficiale della bandiera rossa ai Bagni Delfino (Diano
+ * Marina), rilevata manualmente dall'amministratore guardando la webcam
+ * rivolta verso ovest. Riflette solo quel punto preciso della costa, non
+ * sostituisce le indicazioni degli stabilimenti balneari o della
+ * Capitaneria di Porto.
+ */
+export async function fetchBandieraRossa(): Promise<BandieraRossa | null> {
+  const { data, error } = await supabase
+    .from("bandiera_rossa_bagni_delfino")
+    .select("*")
+    .eq("id", 1)
+    .maybeSingle();
+  if (error) throw error;
+  return data as unknown as BandieraRossa | null;
+}
+
 export type WeatherNow = {
   temperature: number;
   wind: number;

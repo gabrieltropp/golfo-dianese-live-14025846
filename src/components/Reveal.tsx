@@ -2,14 +2,17 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * Card che entra in scena con una leggera salita (traslazione verticale) e
- * dissolvenza, legata allo scroll (serve ~una schermata intera per
- * completare). Nessuna rotazione: solo transform (translate) e opacity.
+ * Card che entra in scena con un ingresso deciso ma fluido (salita +
+ * leggero scale-in + dissolvenza), scandito da un piccolo ritardo in base
+ * alla posizione della card nella pagina — così più card che compaiono
+ * insieme (tipico su schermi più alti) entrano "una dopo l'altra" invece
+ * che tutte insieme.
  *
- * Il calcolo legato allo scroll si attiva solo mentre la card è realmente
- * vicina al viewport (via IntersectionObserver), invece di tenere un
- * listener di scroll globale sempre attivo per ogni card della pagina —
- * evita che più card insieme saturino il thread principale su mobile.
+ * A differenza della versione precedente, l'animazione parte UNA sola
+ * volta quando la card entra nel viewport (IntersectionObserver, soglia
+ * fissa) invece di restare agganciata in continuo alla posizione di
+ * scroll: risultato più "vistoso" e leggero per il thread principale su
+ * mobile (nessun ricalcolo ad ogni frame di scroll).
  */
 export function Reveal({
   index = 0,
@@ -21,9 +24,7 @@ export function Reveal({
   children: ReactNode;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [progress, setProgress] = useState(0);
-  const [done, setDone] = useState(false);
-  const doneRef = useRef(false);
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     const el = ref.current;
@@ -33,80 +34,34 @@ export function Reveal({
       typeof window !== "undefined" &&
       window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     if (reduce) {
-      doneRef.current = true;
-      setProgress(1);
-      setDone(true);
+      setVisible(true);
       return;
     }
 
-    let raf = 0;
-    let listening = false;
-
-    const finish = () => {
-      doneRef.current = true;
-      setDone(true);
-      io.disconnect();
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-    };
-
-    const compute = () => {
-      raf = 0;
-      if (doneRef.current) return; // guardia extra: mai ricalcolare dopo il traguardo
-      const rect = el.getBoundingClientRect();
-      const vh = window.innerHeight || 1;
-      // 0 quando il bordo alto della card entra dal fondo,
-      // 1 dopo circa una schermata intera di scroll.
-      const travelled = vh - rect.top;
-      const p = Math.min(1, Math.max(0, travelled / (vh * 0.92)));
-      setProgress(p);
-      if (p >= 1) finish();
-    };
-
-    const onScroll = () => {
-      if (!raf) raf = requestAnimationFrame(compute);
-    };
-
-    // Ascolta lo scroll globale solo mentre la card è vicina al viewport:
-    // niente listener permanenti per ogni card su tutta la pagina.
     const io = new IntersectionObserver(
       (entries) => {
-        const near = entries.some((entry) => entry.isIntersecting);
-        if (near && !listening) {
-          listening = true;
-          compute();
-          window.addEventListener("scroll", onScroll, { passive: true });
-          window.addEventListener("resize", onScroll);
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setVisible(true);
+          io.disconnect();
         }
       },
-      { rootMargin: "100% 0px 100% 0px" },
+      { threshold: 0.15, rootMargin: "0px 0px -8% 0px" },
     );
     io.observe(el);
-    compute();
 
-    return () => {
-      if (raf) cancelAnimationFrame(raf);
-      io.disconnect();
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-    };
+    return () => io.disconnect();
   }, []);
 
-  const p = done ? 1 : progress;
-  const eased = 1 - Math.pow(1 - p, 3);
+  // Ritardo scandito ma limitato: mai più di 3 "scatti" di attesa, così una
+  // card in fondo alla pagina raggiunta con uno scroll veloce non resta
+  // ferma mezzo secondo prima di comparire.
+  const delayMs = Math.min(index, 3) * 90;
 
   return (
     <div
       ref={ref}
-      className={cn("reveal", done && "is-in", className)}
-      style={
-        done
-          ? undefined
-          : ({
-              transform: `translate3d(0, ${(1 - eased) * 70}px, 0)`,
-              opacity: 0.35 + eased * 0.65,
-            } as React.CSSProperties)
-      }
+      className={cn("reveal", visible && "is-in", className)}
+      style={{ transitionDelay: visible ? `${delayMs}ms` : "0ms" } as React.CSSProperties}
     >
       {children}
     </div>
