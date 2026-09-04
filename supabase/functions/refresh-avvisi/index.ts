@@ -1,11 +1,20 @@
-import { createFileRoute } from "@tanstack/react-router";
-import type { AvvisoRow } from "@/lib/scrape.server";
+import { createClient } from "npm:@supabase/supabase-js@2";
+import {
+  scrapeCervo,
+  scrapeDianoMarina,
+  scrapeRivieracqua,
+  scrapeSanBartolomeo,
+  type AvvisoRow,
+} from "../_shared/scrape.ts";
 
 async function run() {
   try {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { scrapeDianoMarina, scrapeSanBartolomeo, scrapeCervo, scrapeRivieracqua } =
-      await import("@/lib/scrape.server");
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!supabaseUrl || !serviceRoleKey) throw new Error("Configurazione backend mancante");
+    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
 
     const now = new Date().toISOString();
     const sources: Array<{ fonte: string; fn: () => Promise<AvvisoRow[]> }> = [
@@ -101,11 +110,9 @@ async function run() {
   }
 }
 
-export const Route = createFileRoute("/api/public/hooks/refresh-avvisi")({
-  server: {
-    handlers: {
-      GET: async () => run(),
-      POST: async () => run(),
-    },
-  },
+Deno.serve((request) => {
+  if (request.method !== "GET" && request.method !== "POST") {
+    return Response.json({ ok: false, error: "Metodo non consentito" }, { status: 405 });
+  }
+  return run();
 });
