@@ -99,8 +99,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Golfo Dianese Live · Servizi in tempo reale a Diano Marina" },
       { name: "twitter:description", content: "Allerta meteo, balneabilità, acqua potabile e mobilità nel Golfo Dianese in tempo reale." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/d537b6c5-c44a-47dd-9d85-aaa53f755c9f/id-preview-54978248--cec822f0-e787-44f4-b339-140b77eee89b.lovable.app-1785235921316.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/d537b6c5-c44a-47dd-9d85-aaa53f755c9f/id-preview-54978248--cec822f0-e787-44f4-b339-140b77eee89b.lovable.app-1785235921316.png" },
+      { property: "og:site_name", content: "Golfo Dianese Live" },
     ],
     links: [
       {

@@ -114,7 +114,7 @@ export function ComuniCard() {
       summary={t("comuni.subtitle")}
     >
       <ul className="grid gap-2">
-        {GOLFO_COMUNI.map((name) => (
+        {COMUNI_AVVISI.map((name) => (
           <ComuneRow key={name} name={name} avvisi={comuneAvvisi(avvisi, name)} />
         ))}
       </ul>

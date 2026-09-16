@@ -31,7 +31,11 @@ export const Route = createFileRoute("/")({
       { name: "description", content: DESC },
       { property: "og:title", content: "Golfo Dianese Live · Servizi in tempo reale a Diano Marina" },
       { property: "og:description", content: DESC },
+      { property: "og:url", content: "https://golfo-dianese-live.lovable.app/" },
+      { property: "og:image", content: "https://golfo-dianese-live.lovable.app/social-preview.jpg" },
+      { name: "twitter:image", content: "https://golfo-dianese-live.lovable.app/social-preview.jpg" },
     ],
+    links: [{ rel: "canonical", href: "https://golfo-dianese-live.lovable.app/" }],
   }),
   component: Index,
 });
