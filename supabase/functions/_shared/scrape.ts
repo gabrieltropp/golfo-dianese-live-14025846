@@ -266,6 +266,69 @@ export async function scrapeCervo(now: string): Promise<AvvisoRow[]> {
   throw new Error(`Cervo: ${errors.join("; ")}`);
 }
 
+/**
+ * Comuni su piattaforma Municipium (Diano San Pietro, Diano Arentino):
+ * elenco notizie su /it/news con card Bootstrap Italia.
+ */
+async function scrapeMunicipium(
+  now: string,
+  opts: { base: string; fonte: string; comune: string },
+): Promise<AvvisoRow[]> {
+  const html = await getText(`${opts.base}/it/news`, 15_000);
+  const $ = cheerio.load(html);
+  const rows: AvvisoRow[] = [];
+  const seen = new Set<string>();
+  $("article .card-body").each((_, el) => {
+    const card = $(el);
+    const link = card.find("a.link-detail").first();
+    const href = link.attr("href");
+    const titolo = clean(link.find(".card-title").first().text() || link.text());
+    if (!href || !titolo) return;
+    const url = href.startsWith("http") ? href : opts.base + href;
+    if (!url.includes("/news/") || seen.has(url)) return;
+    seen.add(url);
+    // La data sta in uno <span class="h5 card-pretitle"> separato da quello
+    // della categoria, che ha in più la classe card-pretitle-link.
+    const dateText = clean(
+      card
+        .find("span.card-pretitle")
+        .filter((_i, e) => !$(e).hasClass("card-pretitle-link"))
+        .first()
+        .text(),
+    );
+    const data = parseItalianDate(dateText);
+    rows.push({
+      fonte: opts.fonte,
+      comune: opts.comune,
+      titolo,
+      testo_breve: clean(card.find("p.card-text").first().text()) || null,
+      url,
+      data_pubblicazione: data,
+      necessita_revisione: data === null,
+      categoria: clean(card.find(".card-pretitle-link a").first().text()) || "Notizia",
+      fetched_at: now,
+    });
+  });
+  if (rows.length === 0) throw new Error(`${opts.comune}: nessun elemento trovato (markup cambiato?)`);
+  return rows;
+}
+
+export function scrapeDianoSanPietro(now: string): Promise<AvvisoRow[]> {
+  return scrapeMunicipium(now, {
+    base: "https://www.comune.dianosanpietro.im.it",
+    fonte: "Comune di Diano San Pietro",
+    comune: "Diano San Pietro",
+  });
+}
+
+export function scrapeDianoArentino(now: string): Promise<AvvisoRow[]> {
+  return scrapeMunicipium(now, {
+    base: "https://www.comune.dianoarentino.im.it",
+    fonte: "Comune di Diano Arentino",
+    comune: "Diano Arentino",
+  });
+}
+
 const COMUNI_PATTERNS: Array<{ comune: string; pattern: RegExp }> = [
   { comune: "Diano Marina", pattern: /diano\s+marina/i },
   { comune: "Diano Castello", pattern: /diano\s+castello/i },

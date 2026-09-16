@@ -5,7 +5,8 @@ import { StatusCard, StatusBadge, FreshnessNote } from "@/components/StatusCard"
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
 import {
-  GOLFO_COMUNI,
+  COMUNI_AVVISI,
+  FONTI_COMUNI,
   comuneAvvisi,
   dataNonRilevata,
   fetchAvvisi,
@@ -94,13 +95,9 @@ export function ComuniCard() {
     staleTime: 5 * 60 * 1000,
   });
   const avvisi = (data ?? []).filter((a) => a.fonte !== "Rivieracqua");
-  const total = GOLFO_COMUNI.reduce((n, name) => n + comuneAvvisi(avvisi, name).length, 0);
-  const failing = (fonti ?? []).filter((f) => !f.ok);
-  const fresh = freshnessOf(fonti, [
-    "Comune di Diano Marina",
-    "Comune di San Bartolomeo al Mare",
-    "Comune di Cervo",
-  ]);
+  const total = COMUNI_AVVISI.reduce((n, name) => n + comuneAvvisi(avvisi, name).length, 0);
+  const failing = (fonti ?? []).filter((f) => !f.ok && FONTI_COMUNI.includes(f.fonte as never));
+  const fresh = freshnessOf(fonti, [...FONTI_COMUNI]);
 
   return (
     <StatusCard
@@ -117,7 +114,7 @@ export function ComuniCard() {
       summary={t("comuni.subtitle")}
     >
       <ul className="grid gap-2">
-        {GOLFO_COMUNI.map((name) => (
+        {COMUNI_AVVISI.map((name) => (
           <ComuneRow key={name} name={name} avvisi={comuneAvvisi(avvisi, name)} />
         ))}
       </ul>

@@ -1,7 +1,9 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import {
   scrapeCervo,
+  scrapeDianoArentino,
   scrapeDianoMarina,
+  scrapeDianoSanPietro,
   scrapeRivieracqua,
   scrapeSanBartolomeo,
   type AvvisoRow,
@@ -21,6 +23,8 @@ async function run() {
       { fonte: "Comune di Diano Marina", fn: () => scrapeDianoMarina(now) },
       { fonte: "Comune di San Bartolomeo al Mare", fn: () => scrapeSanBartolomeo(now) },
       { fonte: "Comune di Cervo", fn: () => scrapeCervo(now) },
+      { fonte: "Comune di Diano San Pietro", fn: () => scrapeDianoSanPietro(now) },
+      { fonte: "Comune di Diano Arentino", fn: () => scrapeDianoArentino(now) },
       { fonte: "Rivieracqua", fn: () => scrapeRivieracqua(now) },
     ];
 

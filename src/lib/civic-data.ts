@@ -236,8 +236,27 @@ export type Avviso = {
 /** Source label written by the Rivieracqua scraper. Routing is by source, never by keywords. */
 export const FONTE_RIVIERACQUA = "Rivieracqua";
 
-/** The three towns of the Golfo Dianese used to scope Rivieracqua notices. */
+/** The three coastal towns used to scope Rivieracqua (water) notices. */
 export const GOLFO_COMUNI = ["Diano Marina", "San Bartolomeo al Mare", "Cervo"] as const;
+
+/** All the towns of the Golfo Dianese shown in the "Comuni" card. */
+export const COMUNI_AVVISI = [
+  "Diano Marina",
+  "San Bartolomeo al Mare",
+  "Cervo",
+  "Diano Castello",
+  "Diano San Pietro",
+  "Diano Arentino",
+] as const;
+
+/** Sources feeding the "Comuni" card (Diano Castello is manual only). */
+export const FONTI_COMUNI = [
+  "Comune di Diano Marina",
+  "Comune di San Bartolomeo al Mare",
+  "Comune di Cervo",
+  "Comune di Diano San Pietro",
+  "Comune di Diano Arentino",
+] as const;
 
 export function golfoComuniOf(a: Avviso): string[] {
   const cited = a.comuni_citati ?? [];

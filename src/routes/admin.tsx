@@ -692,6 +692,10 @@ function Panel() {
         </div>
       </section>
 
+      <AvvisiManualiPanel locale={lang} />
+
+
+
       <section className={card}>
         <h2 className="mb-1 text-xl font-bold">Allerta meteo — override manuale</h2>
         <p className="mb-3 text-sm text-status-yellow">
