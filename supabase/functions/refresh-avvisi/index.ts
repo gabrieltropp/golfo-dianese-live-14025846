@@ -1,7 +1,9 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import {
   scrapeCervo,
+  scrapeDianoArentino,
   scrapeDianoMarina,
+  scrapeDianoSanPietro,
   scrapeRivieracqua,
   scrapeSanBartolomeo,
   type AvvisoRow,
