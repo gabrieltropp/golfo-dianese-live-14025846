@@ -18,6 +18,7 @@ import {
 } from "@/lib/civic-data";
 import { fetchSegnalazioniInAttesa, type SegnalazioneAdmin } from "@/lib/segnalazioni";
 import { MathHumanCheck } from "@/components/MathHumanCheck";
+import { AvvisiManualiPanel } from "@/components/AvvisiManualiPanel";
 import { siteConfig } from "@/config/site-config";
 
 function ReportRow({ s, locale, onDone }: { s: SegnalazioneAdmin; locale: string; onDone: () => void }) {

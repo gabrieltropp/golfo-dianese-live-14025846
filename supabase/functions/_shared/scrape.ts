@@ -269,12 +269,18 @@ export async function scrapeCervo(now: string): Promise<AvvisoRow[]> {
 /**
  * Comuni su piattaforma Municipium (Diano San Pietro, Diano Arentino):
  * elenco notizie su /it/news con card Bootstrap Italia.
+ *
+ * Il sito divide i contenuti in tre categorie separate (Notizie, Comunicati,
+ * Avvisi) tramite il parametro ?type=. Senza specificarlo si ottiene la
+ * categoria "Notizie" (type=1), che su questi due comuni risulta ferma a
+ * mesi/anni fa — il contenuto realmente aggiornato vive sotto "Avvisi"
+ * (type=3), che è anche semanticamente quella corretta per questa app.
  */
 async function scrapeMunicipium(
   now: string,
   opts: { base: string; fonte: string; comune: string },
 ): Promise<AvvisoRow[]> {
-  const html = await getText(`${opts.base}/it/news`, 15_000);
+  const html = await getText(`${opts.base}/it/news?type=3`, 15_000);
   const $ = cheerio.load(html);
   const rows: AvvisoRow[] = [];
   const seen = new Set<string>();
