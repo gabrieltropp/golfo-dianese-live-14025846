@@ -20,6 +20,7 @@ import { ARPAL_URL } from "@/lib/civic-data";
 import { siteConfig } from "@/config/site-config";
 import bgVideo from "@/assets/sunrisediano.mp4.asset.json";
 import bgPoster from "@/assets/poster-hero.jpg";
+import socialTablet from "@/assets/social-tablet.jpg.asset.json";
 
 const DESC =
   "Allerta meteo Protezione Civile, balneabilità ARPAL, avvisi acqua potabile e mobilità per Diano Marina e il Golfo Dianese.";
@@ -32,8 +33,13 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "Golfo Dianese Live · Servizi in tempo reale a Diano Marina" },
       { property: "og:description", content: DESC },
       { property: "og:url", content: "https://golfo-dianese-live.lovable.app/" },
-      { property: "og:image", content: "https://golfo-dianese-live.lovable.app/social-preview.jpg" },
-      { name: "twitter:image", content: "https://golfo-dianese-live.lovable.app/social-preview.jpg" },
+      { property: "og:type", content: "website" },
+      { property: "og:image", content: `https://golfo-dianese-live.lovable.app${socialTablet.url}` },
+      { property: "og:image:width", content: "1600" },
+      { property: "og:image:height", content: "1200" },
+      { property: "og:image:alt", content: "Golfo Dianese Live: schermata tablet con meteo, balneabilità, webcam e acqua potabile" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: `https://golfo-dianese-live.lovable.app${socialTablet.url}` },
     ],
     links: [{ rel: "canonical", href: "https://golfo-dianese-live.lovable.app/" }],
   }),
