@@ -26,7 +26,9 @@ function AnimatedWord({ word, startDelay }: { word: string; startDelay: number }
             } as React.CSSProperties
           }
         >
-          {ch}
+          {/* Uno spazio normale dentro un inline-block collassa e incollerebbe
+              le parole (es. "Buonpomeriggio"): il non-breaking space lo evita. */}
+          {ch === " " ? "\u00A0" : ch}
         </span>
       ))}
     </span>
