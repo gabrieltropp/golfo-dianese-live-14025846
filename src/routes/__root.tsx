@@ -82,14 +82,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         name: "viewport",
         content: "width=device-width, initial-scale=1, viewport-fit=cover",
       },
-      { title: "Golfo Dianese Live · Servizi in tempo reale a Diano Marina" },
+      { title: "Golfo Dianese Live · Servizi in tempo reale nel Golfo Dianese" },
       {
         name: "description",
         content:
           "Allerta meteo, balneabilità, acqua potabile e mobilità nel Golfo Dianese in tempo reale.",
       },
       { name: "theme-color", content: "#22bdee" },
-      { property: "og:title", content: "Golfo Dianese Live · Servizi in tempo reale a Diano Marina" },
+      { property: "og:title", content: "Golfo Dianese Live · Servizi in tempo reale nel Golfo Dianese" },
       {
         property: "og:description",
         content:
@@ -97,7 +97,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Golfo Dianese Live · Servizi in tempo reale a Diano Marina" },
+      { name: "twitter:title", content: "Golfo Dianese Live · Servizi in tempo reale nel Golfo Dianese" },
       { name: "twitter:description", content: "Allerta meteo, balneabilità, acqua potabile e mobilità nel Golfo Dianese in tempo reale." },
       { property: "og:site_name", content: "Golfo Dianese Live" },
     ],

@@ -28,9 +28,9 @@ const DESC =
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Golfo Dianese Live · Servizi in tempo reale a Diano Marina" },
+      { title: "Golfo Dianese Live · Servizi in tempo reale nel Golfo Dianese" },
       { name: "description", content: DESC },
-      { property: "og:title", content: "Golfo Dianese Live · Servizi in tempo reale a Diano Marina" },
+      { property: "og:title", content: "Golfo Dianese Live · Servizi in tempo reale nel Golfo Dianese" },
       { property: "og:description", content: DESC },
       { property: "og:url", content: "https://golfo-dianese-live.lovable.app/" },
       { property: "og:type", content: "website" },
