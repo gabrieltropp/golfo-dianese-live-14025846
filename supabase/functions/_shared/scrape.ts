@@ -464,9 +464,9 @@ export type BalneazioneScrape = {
 
 function mapStato(raw: string | null): "compliant" | "non_compliant" | "unknown" {
   const s = (raw ?? "").toUpperCase();
-  // "Non monitorata" non è un divieto: vale l'ultima analisi disponibile,
-  // quindi il punto si considera conforme.
-  if (s.includes("MONITOR")) return "compliant";
+  // "Non monitorata" / "Non valutabile" non sono divieti: vale l'ultima
+  // analisi disponibile, quindi il punto si considera conforme.
+  if (s.includes("MONITOR") || s.includes("VALUTABILE")) return "compliant";
   if (s.includes("DIVIET")) return "non_compliant";
   if (s.includes("CONFORME")) return s.includes("NON") ? "non_compliant" : "compliant";
   if (s.includes("NON")) return "non_compliant";
