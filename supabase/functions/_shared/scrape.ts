@@ -464,9 +464,12 @@ export type BalneazioneScrape = {
 
 function mapStato(raw: string | null): "compliant" | "non_compliant" | "unknown" {
   const s = (raw ?? "").toUpperCase();
-  if (s.includes("NON")) return "non_compliant";
-  if (s.includes("CONFORME")) return "compliant";
+  // "Non monitorata" non è un divieto: vale l'ultima analisi disponibile,
+  // quindi il punto si considera conforme.
+  if (s.includes("MONITOR")) return "compliant";
   if (s.includes("DIVIET")) return "non_compliant";
+  if (s.includes("CONFORME")) return s.includes("NON") ? "non_compliant" : "compliant";
+  if (s.includes("NON")) return "non_compliant";
   return "unknown";
 }
 
