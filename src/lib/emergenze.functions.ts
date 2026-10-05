@@ -3,7 +3,12 @@ import { createServerFn } from "@tanstack/react-start";
 export type Emergenza = { titolo: string; url: string; fonte: string; data: string | null };
 
 const QUERY =
-  '(incendio OR incendi OR "vigili del fuoco" OR canadair OR frana OR alluvione OR evacuazione OR "protezione civile") (Diano OR "San Bartolomeo al Mare" OR Cervo OR Imperia OR Andora) when:7d';
+  '(incendio OR incendi OR "vigili del fuoco" OR canadair OR frana OR alluvione OR evacuazione OR "protezione civile") ("Diano Marina" OR "Diano San Pietro" OR "Diano Castello" OR "Diano Arentino" OR "San Bartolomeo al Mare" OR Cervo OR Imperia) when:7d';
+
+// Post-filtro: il titolo deve citare esplicitamente un comune del Dianese o
+// Imperia città (esclude notizie su Andora o sulla sola provincia).
+const LOCALE =
+  /\bdiano\b|san bartolomeo|\bcervo\b|\bimperia\b/i;
 
 function decode(s: string) {
   return s
