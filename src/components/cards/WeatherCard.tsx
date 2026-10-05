@@ -47,10 +47,10 @@ const LABEL_BY_COLOR: Record<AlertColor, Record<string, string>> = {
 };
 
 const EMERG_TEXT: Record<string, { title: string; none: string; note: string }> = {
-  it: { title: "Incendi ed emergenze in corso", none: "Nessuna notizia di incendi o emergenze negli ultimi 7 giorni.", note: "Notizie dalla stampa locale (ultimi 7 giorni). In emergenza chiama il 112." },
-  en: { title: "Fires and ongoing emergencies", none: "No news of fires or emergencies in the last 7 days.", note: "Local press news (last 7 days). In an emergency call 112." },
-  fr: { title: "Incendies et urgences en cours", none: "Aucune nouvelle d'incendie ou d'urgence ces 7 derniers jours.", note: "Presse locale (7 derniers jours). En cas d'urgence, appelez le 112." },
-  de: { title: "Brände und laufende Notfälle", none: "Keine Meldungen zu Bränden oder Notfällen in den letzten 7 Tagen.", note: "Lokalpresse (letzte 7 Tage). Im Notfall 112 anrufen." },
+  it: { title: "Incendi ed emergenze in corso", none: "Nessuna notizia di incendi o emergenze negli ultimi 5 giorni.", note: "Notizie dalla stampa locale (ultimi 5 giorni). In emergenza chiama il 112." },
+  en: { title: "Fires and ongoing emergencies", none: "No news of fires or emergencies in the last 5 days.", note: "Local press news (last 5 days). In an emergency call 112." },
+  fr: { title: "Incendies et urgences en cours", none: "Aucune nouvelle d'incendie ou d'urgence ces 5 derniers jours.", note: "Presse locale (5 derniers jours). En cas d'urgence, appelez le 112." },
+  de: { title: "Brände und laufende Notfälle", none: "Keine Meldungen zu Bränden oder Notfällen in den letzten 5 Tagen.", note: "Lokalpresse (letzte 5 Tage). Im Notfall 112 anrufen." },
 };
 
 function EmergenzeBlock() {
