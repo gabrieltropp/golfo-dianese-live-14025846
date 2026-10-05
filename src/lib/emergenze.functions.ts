@@ -42,7 +42,10 @@ export const getEmergenze = createServerFn({ method: "GET" }).handler(async () =
       data: d && !Number.isNaN(d.getTime()) ? d.toISOString() : null,
     });
   }
-  const filtrati = items.filter((n) => LOCALE.test(n.titolo));
+  const limite = Date.now() - 5 * 24 * 60 * 60 * 1000;
+  const filtrati = items.filter(
+    (n) => LOCALE.test(n.titolo) && n.data !== null && new Date(n.data).getTime() >= limite,
+  );
   filtrati.sort((a, b) => (b.data ?? "").localeCompare(a.data ?? ""));
   return { items: filtrati.slice(0, 8), fetchedAt: new Date().toISOString() };
 });
