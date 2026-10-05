@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Anchor, CloudSun, Droplets, Mountain, Thermometer, Waves, Wind, Zap } from "lucide-react";
+import { Anchor, CloudSun, Droplets, Flame, Mountain, Thermometer, Waves, Wind, Zap } from "lucide-react";
+import { getEmergenze } from "@/lib/emergenze.functions";
 import { StatusCard, DetailRow, type StatusTone } from "@/components/StatusCard";
 import { useI18n } from "@/lib/i18n";
 import {
@@ -44,6 +45,54 @@ const LABEL_BY_COLOR: Record<AlertColor, Record<string, string>> = {
     de: "Rote Warnung",
   },
 };
+
+const EMERG_TEXT: Record<string, { title: string; none: string; note: string }> = {
+  it: { title: "Incendi ed emergenze in corso", none: "Nessuna notizia di incendi o emergenze negli ultimi 7 giorni.", note: "Notizie dalla stampa locale (ultimi 7 giorni). In emergenza chiama il 112." },
+  en: { title: "Fires and ongoing emergencies", none: "No news of fires or emergencies in the last 7 days.", note: "Local press news (last 7 days). In an emergency call 112." },
+  fr: { title: "Incendies et urgences en cours", none: "Aucune nouvelle d'incendie ou d'urgence ces 7 derniers jours.", note: "Presse locale (7 derniers jours). En cas d'urgence, appelez le 112." },
+  de: { title: "Brände und laufende Notfälle", none: "Keine Meldungen zu Bränden oder Notfällen in den letzten 7 Tagen.", note: "Lokalpresse (letzte 7 Tage). Im Notfall 112 anrufen." },
+};
+
+function EmergenzeBlock() {
+  const { t, lang } = useI18n();
+  const tx = EMERG_TEXT[lang] ?? EMERG_TEXT.en;
+  const q = useQuery({
+    queryKey: ["emergenze"],
+    queryFn: () => getEmergenze(),
+    staleTime: 10 * 60 * 1000,
+    refetchInterval: 15 * 60 * 1000,
+    retry: 1,
+  });
+  return (
+    <div className="glass-soft mt-4 rounded-2xl p-4">
+      <p className="mb-2 flex items-center gap-1 text-sm font-bold text-foreground">
+        <Flame className="size-4 text-status-orange" /> {tx.title}
+      </p>
+      {q.isLoading ? (
+        <p className="text-sm text-muted-foreground">{t("app.loading")}</p>
+      ) : q.isError ? (
+        <p className="text-sm text-muted-foreground">{t("app.error")}</p>
+      ) : q.data && q.data.items.length > 0 ? (
+        <ul className="grid gap-2">
+          {q.data.items.map((n) => (
+            <li key={n.url}>
+              <a href={n.url} target="_blank" rel="noopener noreferrer" className="block text-sm font-semibold text-foreground hover:underline">
+                {n.titolo}
+              </a>
+              <p className="text-xs text-muted-foreground">
+                {n.fonte}
+                {n.data ? ` · ${new Date(n.data).toLocaleString(lang, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}` : ""}
+              </p>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-sm text-muted-foreground">{tx.none}</p>
+      )}
+      <p className="mt-3 text-xs text-muted-foreground">{tx.note}</p>
+    </div>
+  );
+}
 
 function DayBlock({ title, day }: { title: string; day: AlertDay }) {
   const { t } = useI18n();
@@ -259,6 +308,8 @@ export function WeatherCard() {
           {alertQuery.isLoading ? t("app.loading") : t("app.error")}
         </p>
       )}
+
+      <EmergenzeBlock />
 
       <p className="mt-4 text-xs text-muted-foreground">
         {t("weather.source")} · {t("app.live")}
