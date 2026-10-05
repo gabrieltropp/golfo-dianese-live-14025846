@@ -42,6 +42,7 @@ export const getEmergenze = createServerFn({ method: "GET" }).handler(async () =
       data: d && !Number.isNaN(d.getTime()) ? d.toISOString() : null,
     });
   }
-  items.sort((a, b) => (b.data ?? "").localeCompare(a.data ?? ""));
-  return { items: items.slice(0, 8), fetchedAt: new Date().toISOString() };
+  const filtrati = items.filter((n) => LOCALE.test(n.titolo));
+  filtrati.sort((a, b) => (b.data ?? "").localeCompare(a.data ?? ""));
+  return { items: filtrati.slice(0, 8), fetchedAt: new Date().toISOString() };
 });
