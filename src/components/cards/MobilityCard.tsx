@@ -1,9 +1,9 @@
 import { useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Car, Bike } from "lucide-react";
+import { Car, Bike, OctagonX } from "lucide-react";
 import { StatusCard, StatusBadge, type StatusTone } from "@/components/StatusCard";
 import { useI18n } from "@/lib/i18n";
-import { fetchBikePath, fetchBikeSegments, type BikeSegment } from "@/lib/civic-data";
+import { fetchBikePath, fetchBikeSegments, fetchChiusure, type BikeSegment } from "@/lib/civic-data";
 
 function BikeRoute({ segments }: { segments: BikeSegment[] }) {
   if (segments.length === 0) return null;
@@ -48,6 +48,47 @@ function BikeRoute({ segments }: { segments: BikeSegment[] }) {
             ))}
         </ul>
       ) : null}
+    </div>
+  );
+}
+
+const CHIUSURE_TXT: Record<string, { title: string; now: string; soon: string; until: string }> = {
+  it: { title: "Chiusure stradali", now: "In corso", soon: "Prevista", until: "fino al" },
+  en: { title: "Road closures", now: "Ongoing", soon: "Planned", until: "until" },
+  fr: { title: "Routes fermées", now: "En cours", soon: "Prévue", until: "jusqu'au" },
+  de: { title: "Straßensperrungen", now: "Aktiv", soon: "Geplant", until: "bis" },
+};
+
+function Chiusure({ lang }: { lang: string }) {
+  const { data } = useQuery({ queryKey: ["chiusure"], queryFn: () => fetchChiusure(), staleTime: 60_000 });
+  if (!data || data.length === 0) return null;
+  const tx = CHIUSURE_TXT[lang] ?? CHIUSURE_TXT.en;
+  const fmt = (d: string) =>
+    new Date(d).toLocaleString(lang, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+  const now = Date.now();
+  return (
+    <div className="mb-3 grid gap-2">
+      <p className="flex items-center gap-1.5 text-sm font-bold text-status-red">
+        <OctagonX className="size-4" /> {tx.title}
+      </p>
+      {data.map((c) => {
+        const active = new Date(c.data_inizio).getTime() <= now;
+        return (
+          <div key={c.id} className="glass-soft rounded-2xl p-3 text-sm">
+            <p className="font-semibold">
+              <span className={active ? "text-status-red" : "text-status-yellow"}>
+                {active ? tx.now : tx.soon}
+              </span>{" "}
+              · {c.strada} — {c.luogo}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {fmt(c.data_inizio)}
+              {c.data_fine ? ` → ${tx.until} ${fmt(c.data_fine)}` : ""}
+            </p>
+            {c.nota ? <p className="mt-1 text-xs">{c.nota}</p> : null}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -166,6 +207,7 @@ export function MobilityCard() {
           <h3 className="mb-2 flex items-center gap-2 text-lg font-bold">
             <Car className="size-5" /> {t("mobility.traffic")}
           </h3>
+          <Chiusure lang={lang} />
           <p className="mb-2 text-sm text-muted-foreground">{t("mobility.trafficArea")}</p>
           <div className="w-full max-w-full overflow-hidden rounded-2xl border border-border">
             <TrafficMap />
