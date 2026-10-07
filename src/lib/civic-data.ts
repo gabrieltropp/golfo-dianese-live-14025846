@@ -212,6 +212,23 @@ export async function fetchBikeSegments() {
   if (error) throw error;
   return (data ?? []) as unknown as BikeSegment[];
 }
+export type ChiusuraStrada = {
+  id: string;
+  strada: string;
+  luogo: string;
+  data_inizio: string;
+  data_fine: string | null;
+  nota: string | null;
+};
+
+/** Manual road closures; by default only current and upcoming ones. */
+export async function fetchChiusure(all = false) {
+  let q = supabase.from("chiusure_strade").select("*").order("data_inizio", { ascending: true });
+  if (!all) q = q.or(`data_fine.is.null,data_fine.gte.${new Date().toISOString()}`);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as unknown as ChiusuraStrada[];
+}
 
 
 export const ARPAL_URL =

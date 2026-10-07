@@ -19,6 +19,7 @@ import {
 import { fetchSegnalazioniInAttesa, type SegnalazioneAdmin } from "@/lib/segnalazioni";
 import { MathHumanCheck } from "@/components/MathHumanCheck";
 import { AvvisiManualiPanel } from "@/components/AvvisiManualiPanel";
+import { ChiusureStradePanel } from "@/components/ChiusureStradePanel";
 import { siteConfig } from "@/config/site-config";
 
 function ReportRow({ s, locale, onDone }: { s: SegnalazioneAdmin; locale: string; onDone: () => void }) {
@@ -694,6 +695,7 @@ function Panel() {
       </section>
 
       <AvvisiManualiPanel locale={lang} />
+      <ChiusureStradePanel locale={lang} />
 
 
 
