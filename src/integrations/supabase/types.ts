@@ -250,6 +250,36 @@ export type Database = {
         }
         Relationships: []
       }
+      chiusure_strade: {
+        Row: {
+          created_at: string
+          data_fine: string | null
+          data_inizio: string
+          id: string
+          luogo: string
+          nota: string | null
+          strada: string
+        }
+        Insert: {
+          created_at?: string
+          data_fine?: string | null
+          data_inizio: string
+          id?: string
+          luogo: string
+          nota?: string | null
+          strada: string
+        }
+        Update: {
+          created_at?: string
+          data_fine?: string | null
+          data_inizio?: string
+          id?: string
+          luogo?: string
+          nota?: string | null
+          strada?: string
+        }
+        Relationships: []
+      }
       fonti_stato: {
         Row: {
           anomalia: string | null
